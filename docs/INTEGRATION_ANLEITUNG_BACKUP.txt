@@ -1,0 +1,78 @@
+/**
+ * b1gMailServer Plugin Integration - ANLEITUNG
+ * 
+ * WICHTIG: Dies ist eine ANLEITUNG, kein ausführbarer Code!
+ * Die Integration wurde bereits in b1gmailserver.plugin.php durchgeführt!
+ * 
+ * Datum: 31. Oktober 2025
+ */
+
+DIESE DATEI IST NUR ZUR DOKUMENTATION!
+
+Die hier beschriebenen Code-Änderungen wurden bereits umgesetzt in:
+→ src/plugins/b1gmailserver.plugin.php (Zeilen 47-49, 2024-2058)
+
+===============================================================================
+SCHRITT 1: Protocol-Helpers laden (BEREITS ERLEDIGT)
+===============================================================================
+
+Zeile 47-49 in b1gmailserver.plugin.php:
+
+// Load extended protocol support (NEW!)
+require_once(__DIR__ . '/../serverlib/protocol-components.inc.php');
+require_once(__DIR__ . '/../serverlib/protocol-helpers.inc.php');
+
+===============================================================================
+SCHRITT 2: Admin-Page Routing (BEREITS ERLEDIGT)
+===============================================================================
+
+Zeilen 2024-2058 in b1gmailserver.plugin.php:
+
+// NEW PROTOCOL PAGES
+else if($_REQUEST['do'] == 'cyrus')
+{
+    require_once(__DIR__ . '/pages/cyrus-status.page.php');
+    $page = renderCyrusStatusPage($this, $tpl);
+    $tpl->assign('pageURL', $this->_adminLink('&do=cyrus'));
+    $tpl->assign('page', $page);
+}
+else if($_REQUEST['do'] == 'grommunio')
+{
+    require_once(__DIR__ . '/pages/grommunio-status.page.php');
+    $page = renderGrommunioStatusPage($this, $tpl);
+    $tpl->assign('pageURL', $this->_adminLink('&do=grommunio'));
+    $tpl->assign('page', $page);
+}
+else if($_REQUEST['do'] == 'sftpgo')
+{
+    require_once(__DIR__ . '/pages/sftpgo-status.page.php');
+    $page = renderSFTPGoStatusPage($this, $tpl);
+    $tpl->assign('pageURL', $this->_adminLink('&do=sftpgo'));
+    $tpl->assign('page', $page);
+}
+else if($_REQUEST['do'] == 'postfix')
+{
+    require_once(__DIR__ . '/pages/postfix-status.page.php');
+    $page = renderPostfixStatusPage($this, $tpl);
+    $tpl->assign('pageURL', $this->_adminLink('&do=postfix'));
+    $tpl->assign('page', $page);
+}
+else if($_REQUEST['do'] == 'dashboard' || $_REQUEST['do'] == 'modern_stats')
+{
+    require_once(__DIR__ . '/pages/modern-stats.page.php');
+    $page = renderModernStatsDashboard($this, $tpl);
+    $tpl->assign('pageURL', $this->_adminLink('&do=dashboard'));
+    $tpl->assign('page', $page);
+}
+
+===============================================================================
+STATUS: INTEGRATION KOMPLETT ABGESCHLOSSEN!
+===============================================================================
+
+✅ Protocol-Helpers geladen
+✅ Admin-Pages eingebunden
+✅ Templates vorhanden
+✅ Bridges erstellt
+✅ Docker konfiguriert
+
+Diese Anleitung wird nicht mehr benötigt!

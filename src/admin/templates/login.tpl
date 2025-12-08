@@ -42,6 +42,7 @@
 						<label class="form-label">{lng p="password"}</label>
 						<input type="password" id="pw" name="password" class="form-control" placeholder="{lng p="password"}" autocomplete="off">
 					</div>
+					{$csrf_token_field}
 					<div class="form-footer">
 						<button type="submit" class="btn btn-primary w-100">{lng p="login"}</button>
 					</div>

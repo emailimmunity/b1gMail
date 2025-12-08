@@ -65,6 +65,11 @@ if($_REQUEST['action'] == 'users')
 		// single action?
 		if(isset($_REQUEST['singleAction']))
 		{
+			// CSRF Protection for single actions
+			if(!validateCsrfToken($_REQUEST['csrf_token'] ?? '')) {
+				die('CSRF token validation failed');
+			}
+			
 			if($_REQUEST['singleAction'] == 'lock')
 			{
 				$db->Query('UPDATE {pre}users SET gesperrt=? WHERE id=?',
@@ -115,6 +120,11 @@ if($_REQUEST['action'] == 'users')
 		// mass action
 		if(isset($_REQUEST['executeMassAction']))
 		{
+			// CSRF Protection for mass actions
+			if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+				die('CSRF token validation failed');
+			}
+			
 			// get user IDs
 			$userIDs = array();
 			foreach($_POST as $key=>$val)
@@ -922,6 +932,11 @@ else if($_REQUEST['action'] == 'create')
 	// create user
 	if(isset($_REQUEST['create']))
 	{
+		// CSRF Protection
+		if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+			die('CSRF token validation failed');
+		}
+		
 		$msgIcon = 'error32';
 		$msgText = '?';
 

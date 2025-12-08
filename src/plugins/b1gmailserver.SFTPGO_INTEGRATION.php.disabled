@@ -1,0 +1,404 @@
+<?php
+/**
+ * SFTPGo Integration for b1gmailserver Plugin
+ * Copyright (c) 2025 b1gMail Project
+ * 
+ * Admin interface integration for SFTPGo (SFTP/FTPS/S3)
+ * Analog to Cyrus & Grommunio integration
+ * 
+ * INTEGRATION INSTRUCTIONS:
+ * =========================
+ * 
+ * Add this to src/plugins/b1gmailserver.plugin.php:
+ * 
+ * 1. In AdminPage() method, add new case:
+ * 
+ *    case 'sftpgo':
+ *        include(dirname(__FILE__) . '/b1gmailserver.SFTPGO_INTEGRATION.php');
+ *        sftpgoAdminPage($tpl);
+ *        break;
+ * 
+ * 2. In AdminPage() method, add menu item:
+ * 
+ *    $tpl->assign('haveSFTPGo', defined('SFTPGO_ENABLED') && SFTPGO_ENABLED);
+ * 
+ * 3. In bms.admin.tpl, add menu link:
+ * 
+ *    {if $haveSFTPGo}
+ *    <li><a href="admin.php?page=bms&action=sftpgo">
+ *        <i class="fa fa-cloud"></i> SFTPGo (Cloud Storage)
+ *    </a></li>
+ *    {/if}
+ */
+
+// Load SFTPGo components
+require_once(B1GMAIL_DIR . '/serverlib/sftpgo-config.inc.php');
+require_once(B1GMAIL_DIR . '/serverlib/sftpgo-bridge.inc.php');
+require_once(B1GMAIL_DIR . '/serverlib/sftpgo-hooks.inc.php');
+
+/**
+ * SFTPGo Admin Page Handler
+ * 
+ * @param BMTemplate $tpl Template object
+ */
+function sftpgoAdminPage(&$tpl)
+{
+	global $db;
+	
+	// Check if enabled
+	if(!isSFTPGoEnabled())
+	{
+		$tpl->assign('sftpgo_error', 'SFTPGo is not enabled in configuration');
+		return;
+	}
+	
+	// Get action
+	$action = isset($_REQUEST['do']) ? $_REQUEST['do'] : '';
+	
+	// Handle actions
+	switch($action)
+	{
+		case 'start_migration':
+			sftpgoStartMigration();
+			break;
+		
+		case 'close_connection':
+			if(isset($_REQUEST['connection_id']))
+			{
+				sftpgoCloseConnection($_REQUEST['connection_id']);
+			}
+			break;
+		
+		case 'resolve_error':
+			if(isset($_REQUEST['error_id']))
+			{
+				sftpgoResolveError($_REQUEST['error_id']);
+			}
+			break;
+		
+		case 'sync_user':
+			if(isset($_REQUEST['user_id']))
+			{
+				sftpgoSyncUser($_REQUEST['user_id']);
+			}
+			break;
+	}
+	
+	// Get statistics
+	$stats = sftpgoGetAdminStats();
+	$tpl->assign('sftpgo_stats', $stats);
+	
+	// Get recent transfers
+	$transfers = sftpgoGetRecentTransfers(20);
+	$tpl->assign('sftpgo_transfers', $transfers);
+	
+	// Get active connections
+	$connections = sftpgoGetActiveConnections();
+	$tpl->assign('sftpgo_connections', $connections);
+	
+	// Get recent errors
+	$errors = sftpgoGetRecentErrors(10);
+	$tpl->assign('sftpgo_errors', $errors);
+	
+	// Get top users by storage
+	$topUsers = sftpgoGetTopUsers(10);
+	$tpl->assign('sftpgo_top_users', $topUsers);
+	
+	// Connection test
+	$bridge = getSFTPGoBridge();
+	$connectionTest = $bridge->test();
+	$tpl->assign('sftpgo_connection', $connectionTest);
+	
+	// Render template
+	$tpl->display('bms.admin.sftpgo.tpl');
+}
+
+/**
+ * Get admin statistics
+ */
+function sftpgoGetAdminStats()
+{
+	global $db;
+	
+	$stats = array(
+		'total_users' => 0,
+		'enabled_users' => 0,
+		'total_storage_gb' => 0,
+		'total_files' => 0,
+		'transfers_today' => 0,
+		'uploads_today' => 0,
+		'downloads_today' => 0,
+		'bytes_today_gb' => 0,
+		'active_connections' => 0,
+		'sftp_connections' => 0,
+		'ftps_connections' => 0,
+		's3_connections' => 0,
+		'errors_today' => 0
+	);
+	
+	// Total users
+	$res = $db->Query('SELECT COUNT(*) FROM {pre}users');
+	list($stats['total_users']) = $res->FetchArray(MYSQLI_NUM);
+	$res->Free();
+	
+	// Enabled users
+	$res = $db->Query('SELECT COUNT(*) FROM {pre}users WHERE sftpgo_enabled="yes"');
+	list($stats['enabled_users']) = $res->FetchArray(MYSQLI_NUM);
+	$res->Free();
+	
+	// Storage usage
+	$res = $db->Query('SELECT SUM(used_quota_size), SUM(used_quota_files) 
+	                   FROM {pre}sftpgo_users');
+	list($bytes, $files) = $res->FetchArray(MYSQLI_NUM);
+	$res->Free();
+	
+	$stats['total_storage_gb'] = round($bytes / 1024 / 1024 / 1024, 2);
+	$stats['total_files'] = $files;
+	
+	// Today's transfers
+	$res = $db->Query('SELECT COUNT(*), 
+	                   SUM(CASE WHEN action="upload" THEN 1 ELSE 0 END),
+	                   SUM(CASE WHEN action="download" THEN 1 ELSE 0 END),
+	                   SUM(filesize)
+	                   FROM {pre}sftpgo_transfers 
+	                   WHERE FROM_UNIXTIME(timestamp) >= CURDATE()');
+	list($total, $uploads, $downloads, $bytes) = $res->FetchArray(MYSQLI_NUM);
+	$res->Free();
+	
+	$stats['transfers_today'] = $total;
+	$stats['uploads_today'] = $uploads;
+	$stats['downloads_today'] = $downloads;
+	$stats['bytes_today_gb'] = round($bytes / 1024 / 1024 / 1024, 2);
+	
+	// Active connections
+	$res = $db->Query('SELECT COUNT(*), 
+	                   SUM(CASE WHEN protocol="SFTP" THEN 1 ELSE 0 END),
+	                   SUM(CASE WHEN protocol="FTPS" THEN 1 ELSE 0 END),
+	                   SUM(CASE WHEN protocol="S3" THEN 1 ELSE 0 END)
+	                   FROM {pre}sftpgo_connections 
+	                   WHERE last_activity > UNIX_TIMESTAMP() - 300');
+	list($total, $sftp, $ftps, $s3) = $res->FetchArray(MYSQLI_NUM);
+	$res->Free();
+	
+	$stats['active_connections'] = $total;
+	$stats['sftp_connections'] = $sftp;
+	$stats['ftps_connections'] = $ftps;
+	$stats['s3_connections'] = $s3;
+	
+	// Errors today
+	$res = $db->Query('SELECT COUNT(*) FROM {pre}sftpgo_errors 
+	                   WHERE FROM_UNIXTIME(timestamp) >= CURDATE() 
+	                   AND resolved="no"');
+	list($stats['errors_today']) = $res->FetchArray(MYSQLI_NUM);
+	$res->Free();
+	
+	return $stats;
+}
+
+/**
+ * Get recent transfers
+ */
+function sftpgoGetRecentTransfers($limit = 20)
+{
+	global $db;
+	
+	$transfers = array();
+	
+	$res = $db->Query('SELECT * FROM {pre}sftpgo_transfers 
+	                   ORDER BY timestamp DESC 
+	                   LIMIT ?', $limit);
+	
+	while($row = $res->FetchArray(MYSQLI_ASSOC))
+	{
+		$row['filesize_formatted'] = formatBytes($row['filesize']);
+		$transfers[] = $row;
+	}
+	
+	$res->Free();
+	
+	return $transfers;
+}
+
+/**
+ * Get active connections
+ */
+function sftpgoGetActiveConnections()
+{
+	global $db;
+	
+	$connections = array();
+	
+	// Get from database (last 5 minutes)
+	$res = $db->Query('SELECT * FROM {pre}sftpgo_connections 
+	                   WHERE last_activity > UNIX_TIMESTAMP() - 300 
+	                   ORDER BY last_activity DESC');
+	
+	while($row = $res->FetchArray(MYSQLI_ASSOC))
+	{
+		$row['bytes_sent_formatted'] = formatBytes($row['bytes_sent']);
+		$row['bytes_received_formatted'] = formatBytes($row['bytes_received']);
+		$connections[] = $row;
+	}
+	
+	$res->Free();
+	
+	// Also get from SFTPGo API
+	try {
+		$bridge = getSFTPGoBridge();
+		$apiConnections = $bridge->getConnections();
+		
+		// Merge with database data
+		foreach($apiConnections as $conn)
+		{
+			// Check if already in database
+			$found = false;
+			foreach($connections as &$dbConn)
+			{
+				if($dbConn['connection_id'] === $conn['id'])
+				{
+					$found = true;
+					// Update with fresh data
+					$dbConn['bytes_sent'] = $conn['bytes_sent'] ?? $dbConn['bytes_sent'];
+					$dbConn['bytes_received'] = $conn['bytes_received'] ?? $dbConn['bytes_received'];
+					break;
+				}
+			}
+			
+			if(!$found)
+			{
+				// New connection not yet in DB
+				$connections[] = array(
+					'connection_id' => $conn['id'],
+					'email' => $conn['username'],
+					'protocol' => $conn['protocol'],
+					'ip_address' => $conn['remote_address'],
+					'connected_at' => time() - ($conn['active_since'] ?? 0),
+					'bytes_sent' => $conn['bytes_sent'] ?? 0,
+					'bytes_received' => $conn['bytes_received'] ?? 0,
+					'bytes_sent_formatted' => formatBytes($conn['bytes_sent'] ?? 0),
+					'bytes_received_formatted' => formatBytes($conn['bytes_received'] ?? 0)
+				);
+			}
+		}
+	} catch(Exception $e) {
+		// Ignore API errors
+	}
+	
+	return $connections;
+}
+
+/**
+ * Get recent errors
+ */
+function sftpgoGetRecentErrors($limit = 10)
+{
+	global $db;
+	
+	$errors = array();
+	
+	$res = $db->Query('SELECT * FROM {pre}sftpgo_errors 
+	                   WHERE resolved="no" 
+	                   ORDER BY timestamp DESC 
+	                   LIMIT ?', $limit);
+	
+	while($row = $res->FetchArray(MYSQLI_ASSOC))
+	{
+		$errors[] = $row;
+	}
+	
+	$res->Free();
+	
+	return $errors;
+}
+
+/**
+ * Get top users by storage
+ */
+function sftpgoGetTopUsers($limit = 10)
+{
+	global $db;
+	
+	$users = array();
+	
+	$res = $db->Query('SELECT su.*, u.email 
+	                   FROM {pre}sftpgo_users su 
+	                   JOIN {pre}users u ON su.userid=u.id 
+	                   ORDER BY su.used_quota_size DESC 
+	                   LIMIT ?', $limit);
+	
+	while($row = $res->FetchArray(MYSQLI_ASSOC))
+	{
+		$row['used_gb'] = round($row['used_quota_size'] / 1024 / 1024 / 1024, 2);
+		$row['quota_gb'] = round($row['quota_size'] / 1024 / 1024 / 1024, 2);
+		$row['percent'] = $row['quota_size'] > 0 
+			? round(($row['used_quota_size'] / $row['quota_size']) * 100, 1)
+			: 0;
+		$users[] = $row;
+	}
+	
+	$res->Free();
+	
+	return $users;
+}
+
+/**
+ * Start migration
+ */
+function sftpgoStartMigration()
+{
+	// Redirect to migration page or trigger background job
+	header('Location: admin.php?page=bms&action=sftpgo&message=migration_started');
+	exit;
+}
+
+/**
+ * Close connection
+ */
+function sftpgoCloseConnection($connectionId)
+{
+	$bridge = getSFTPGoBridge();
+	
+	if($bridge->closeConnection($connectionId))
+	{
+		header('Location: admin.php?page=bms&action=sftpgo&message=connection_closed');
+	}
+	else
+	{
+		header('Location: admin.php?page=bms&action=sftpgo&error=connection_close_failed');
+	}
+	
+	exit;
+}
+
+/**
+ * Resolve error
+ */
+function sftpgoResolveError($errorId)
+{
+	global $db;
+	
+	$db->Query('UPDATE {pre}sftpgo_errors SET resolved="yes", resolved_date=UNIX_TIMESTAMP() WHERE id=?',
+		$errorId);
+	
+	header('Location: admin.php?page=bms&action=sftpgo&message=error_resolved');
+	exit;
+}
+
+/**
+ * Sync user
+ */
+function sftpgoSyncUser($userId)
+{
+	if(sftpgoHookSyncUser($userId))
+	{
+		header('Location: admin.php?page=bms&action=sftpgo&message=user_synced');
+	}
+	else
+	{
+		header('Location: admin.php?page=bms&action=sftpgo&error=user_sync_failed');
+	}
+	
+	exit;
+}
+
+?>

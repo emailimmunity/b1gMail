@@ -52,6 +52,11 @@ if($_REQUEST['action'] == 'account')
 
 	if(isset($_REQUEST['changePassword']) && isset($_POST['newpw1']))
 	{
+		// CSRF Protection
+		if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+			die('CSRF token validation failed');
+		}
+		
 		if(strlen($_POST['newpw1']) < 6 || $_POST['newpw1'] != $_POST['newpw2'])
 		{
 			$tpl->assign('msgTitle', $lang_admin['error']);
@@ -94,6 +99,11 @@ else if($_REQUEST['action'] == 'admins' && $adminRow['type'] == 0)
 
 		if(isset($_REQUEST['save']) && isset($_POST['username']))
 		{
+			// CSRF Protection
+			if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+				die('CSRF token validation failed');
+			}
+			
 			$res = $db->Query('SELECT `adminid` FROM {pre}admins WHERE `username`=?',
 				$_POST['username']);
 			$existingCount = $res->RowCount();
@@ -190,6 +200,11 @@ else if($_REQUEST['action'] == 'admins' && $adminRow['type'] == 0)
 
 		if(isset($_REQUEST['add']) && isset($_POST['username']))
 		{
+			// CSRF Protection
+			if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+				die('CSRF token validation failed');
+			}
+			
 			$res = $db->Query('SELECT COUNT(*) FROM {pre}admins WHERE `username`=?',
 				$_POST['username']);
 			list($existingCount) = $res->FetchArray(MYSQLI_NUM);
@@ -232,6 +247,11 @@ else if($_REQUEST['action'] == 'admins' && $adminRow['type'] == 0)
 
 		else if(isset($_REQUEST['delete']) && (int)$_REQUEST['delete']>1)
 		{
+			// CSRF Protection
+			if(!validateCsrfToken($_REQUEST['csrf_token'] ?? '')) {
+				die('CSRF token validation failed');
+			}
+			
 			$db->Query('DELETE FROM {pre}admins WHERE `adminid`=?',
 				(int)$_REQUEST['delete']);
 		}
@@ -239,6 +259,11 @@ else if($_REQUEST['action'] == 'admins' && $adminRow['type'] == 0)
 		// mass action?
 		else if(isset($_REQUEST['executeMassAction']))
 		{
+			// CSRF Protection
+			if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+				die('CSRF token validation failed');
+			}
+			
 			// get domains
 			$massAdmins = array();
 			foreach($_POST as $key=>$val)

@@ -1,0 +1,547 @@
+<?php
+/**
+ * Config Admin Interface for b1gmailserver Plugin
+ * Copyright (c) 2025 b1gMail Project
+ * 
+ * Admin-GUI für ALLE Protokoll-Konfigurationen:
+ * - Cyrus IMAP/POP3/JMAP
+ * - Postfix (SMTP)
+ * - SabreDAV (CalDAV/CardDAV)
+ * - Grommunio (MAPI/EWS/EAS)
+ * - SFTPGo (SFTP/FTPS/S3/WebDAV)
+ * 
+ * INTEGRATION:
+ * In b1gmailserver.plugin.php:
+ * 
+ * case 'config':
+ *     include(dirname(__FILE__) . '/b1gmailserver.CONFIG_ADMIN.php');
+ *     configAdminPage($tpl);
+ *     break;
+ */
+
+// Load hybrid config system
+require_once(B1GMAIL_DIR . 'serverlib/protocols-config.inc.php');
+
+/**
+ * Config Admin Page Handler
+ */
+function configAdminPage(&$tpl, $plugin = null)
+{
+	global $db;
+	
+	$action = isset($_REQUEST['do']) ? $_REQUEST['do'] : '';
+	$category = isset($_REQUEST['cat']) ? $_REQUEST['cat'] : 'cyrus';
+	
+	// Handle actions
+	switch($action)
+	{
+		case 'save':
+			saveProtocolConfig($category);
+			break;
+		
+		case 'test':
+			testProtocolConnection($category);
+			break;
+		
+		case 'backup':
+			backupConfig();
+			break;
+		
+		case 'restore':
+			restoreConfig();
+			break;
+		
+		case 'reset':
+			resetConfig($category);
+			break;
+	}
+	
+	// Get all config values with sources
+	$config = getAllConfigWithSources();
+	$tpl->assign('protocol_config', $config);
+	
+	// Get config sources info
+	$sources = getConfigSources();
+	$tpl->assign('config_sources', $sources);
+	
+	// Current category
+	$tpl->assign('current_category', $category);
+	
+	// Page URL for links (WICHTIG für korrekte Navigation!)
+	if($plugin && method_exists($plugin, '_adminLink')) {
+		$tpl->assign('pageURL', $plugin->_adminLink());
+	} else {
+		$tpl->assign('pageURL', 'admin.php?page=bms&');
+	}
+	
+	// Assign page template (Plugin Architecture)
+	if($plugin && method_exists($plugin, '_templatePath')) {
+		$tpl->assign('page', $plugin->_templatePath('bms.admin.config.tpl'));
+	} else {
+		$tpl->assign('page', '../plugins/templates/bms.admin.config.tpl');
+	}
+}
+
+/**
+ * Get all config values with their sources
+ */
+function getAllConfigWithSources()
+{
+	$configs = array();
+	
+	// Define all config keys per category
+	$configDefinitions = array(
+		'cyrus' => array(
+			'cyrus_enabled' => array('type' => 'bool', 'label' => 'Cyrus aktiviert', 'env' => 'CYRUS_ENABLED'),
+			'cyrus_server' => array('type' => 'string', 'label' => 'Server', 'env' => 'CYRUS_SERVER'),
+			'cyrus_imap_port' => array('type' => 'int', 'label' => 'IMAP Port', 'env' => 'CYRUS_IMAP_PORT'),
+			'cyrus_pop3_port' => array('type' => 'int', 'label' => 'POP3 Port', 'env' => 'CYRUS_POP3_PORT'),
+			'cyrus_admin_user' => array('type' => 'string', 'label' => 'Admin User', 'env' => 'CYRUS_ADMIN_USER'),
+			'cyrus_admin_pass' => array('type' => 'password', 'label' => 'Admin Passwort', 'env' => 'CYRUS_ADMIN_PASS'),
+			'cyrus_jmap_url' => array('type' => 'string', 'label' => 'JMAP URL', 'env' => 'CYRUS_JMAP_URL'),
+		),
+		'postfix' => array(
+			'postfix_server' => array('type' => 'string', 'label' => 'Server', 'env' => 'POSTFIX_SERVER'),
+			'smtp_port' => array('type' => 'int', 'label' => 'SMTP Port', 'env' => 'SMTP_PORT'),
+			'submission_port' => array('type' => 'int', 'label' => 'Submission Port', 'env' => 'SUBMISSION_PORT'),
+			'smtps_port' => array('type' => 'int', 'label' => 'SMTPS Port', 'env' => 'SMTPS_PORT'),
+		),
+		'grommunio' => array(
+			'grommunio_enabled' => array('type' => 'bool', 'label' => 'Grommunio aktiviert', 'env' => 'GROMMUNIO_ENABLED'),
+			'grommunio_server' => array('type' => 'string', 'label' => 'Server', 'env' => 'GROMMUNIO_SERVER'),
+			'grommunio_admin_api' => array('type' => 'string', 'label' => 'Admin API URL', 'env' => 'GROMMUNIO_ADMIN_API'),
+			'grommunio_admin_user' => array('type' => 'string', 'label' => 'Admin User', 'env' => 'GROMMUNIO_ADMIN_USER'),
+			'grommunio_admin_pass' => array('type' => 'password', 'label' => 'Admin Passwort', 'env' => 'GROMMUNIO_ADMIN_PASS'),
+			'grommunio_mapi_url' => array('type' => 'string', 'label' => 'MAPI URL', 'env' => 'GROMMUNIO_MAPI_URL'),
+			'grommunio_ews_url' => array('type' => 'string', 'label' => 'EWS URL', 'env' => 'GROMMUNIO_EWS_URL'),
+			'grommunio_eas_url' => array('type' => 'string', 'label' => 'EAS URL', 'env' => 'GROMMUNIO_EAS_URL'),
+			'grommunio_autodiscover_url' => array('type' => 'string', 'label' => 'AutoDiscover URL', 'env' => 'GROMMUNIO_AUTODISCOVER_URL'),
+		),
+		'sftpgo' => array(
+			'sftpgo_enabled' => array('type' => 'bool', 'label' => 'SFTPGo aktiviert', 'env' => 'SFTPGO_ENABLED'),
+			'sftpgo_server' => array('type' => 'string', 'label' => 'Server', 'env' => 'SFTPGO_SERVER'),
+			'sftpgo_sftp_port' => array('type' => 'int', 'label' => 'SFTP Port', 'env' => 'SFTPGO_SFTP_PORT'),
+			'sftpgo_ftps_port' => array('type' => 'int', 'label' => 'FTPS Port', 'env' => 'SFTPGO_FTPS_PORT'),
+			'sftpgo_admin_api' => array('type' => 'string', 'label' => 'Admin API URL', 'env' => 'SFTPGO_ADMIN_API'),
+			'sftpgo_admin_user' => array('type' => 'string', 'label' => 'Admin User', 'env' => 'SFTPGO_ADMIN_USER'),
+			'sftpgo_admin_pass' => array('type' => 'password', 'label' => 'Admin Passwort', 'env' => 'SFTPGO_ADMIN_PASS'),
+			'sftpgo_s3_enabled' => array('type' => 'bool', 'label' => 'S3 aktiviert', 'env' => 'SFTPGO_S3_ENABLED'),
+			'sftpgo_s3_endpoint' => array('type' => 'string', 'label' => 'S3 Endpoint', 'env' => 'SFTPGO_S3_ENDPOINT'),
+			'sftpgo_webdav_enabled' => array('type' => 'bool', 'label' => 'WebDAV aktiviert', 'env' => 'SFTPGO_WEBDAV_ENABLED'),
+			'sftpgo_webdav_endpoint' => array('type' => 'string', 'label' => 'WebDAV Endpoint', 'env' => 'SFTPGO_WEBDAV_ENDPOINT'),
+		),
+	);
+	
+	// Get values and sources for each config
+	foreach($configDefinitions as $category => $settings)
+	{
+		$configs[$category] = array();
+		
+		foreach($settings as $key => $def)
+		{
+			$value = getProtocolConfig($key, $def['env'], null);
+			$source = getConfigSource($key, $def['env']);
+			
+			$configs[$category][$key] = array(
+				'label' => $def['label'],
+				'type' => $def['type'],
+				'value' => $value,
+				'source' => $source['source'],
+				'source_detail' => $source['detail'],
+				'editable' => $source['editable'],
+				'env_var' => $def['env']
+			);
+		}
+	}
+	
+	return $configs;
+}
+
+/**
+ * Get config source for a specific key
+ */
+function getConfigSource($key, $envVar)
+{
+	// Check Umgebungsvariable
+	$envValue = getenv($envVar);
+	if($envValue !== false)
+	{
+		return array(
+			'source' => 'env',
+			'detail' => "Umgebungsvariable ({$envVar})",
+			'editable' => false // Kann nicht geändert werden
+		);
+	}
+	
+	// Check lokale Datei
+	global $protocolsConfig;
+	if(isset($protocolsConfig[$key]))
+	{
+		return array(
+			'source' => 'file',
+			'detail' => 'Lokale Config-Datei',
+			'editable' => true // Kann überschrieben werden (in DB)
+		);
+	}
+	
+	// Check Datenbank
+	global $db;
+	if(isset($db))
+	{
+		try {
+			$res = $db->Query('SELECT config_value FROM {pre}protocols_config WHERE config_key=?', $key);
+			if($row = $res->FetchArray(MYSQLI_ASSOC))
+			{
+				$res->Free();
+				return array(
+					'source' => 'db',
+					'detail' => 'Datenbank',
+					'editable' => true
+				);
+			}
+			$res->Free();
+		} catch(Exception $e) {
+			// DB nicht verfügbar
+		}
+	}
+	
+	// Default
+	return array(
+		'source' => 'default',
+		'detail' => 'Default-Wert',
+		'editable' => true
+	);
+}
+
+/**
+ * Get config sources overview
+ */
+function getConfigSources()
+{
+	global $db;
+	
+	$sources = array();
+	
+	// 1. Umgebungsvariablen
+	$envVars = array();
+	$allEnvVars = getenv();
+	
+	// Filter relevante ENV-Variablen
+	$relevantPrefixes = array('CYRUS_', 'POSTFIX_', 'SMTP_', 'GROMMUNIO_', 'SFTPGO_', 'SABREDAV_', 'CALDAV_', 'CARDDAV_');
+	foreach($allEnvVars as $key => $value)
+	{
+		foreach($relevantPrefixes as $prefix)
+		{
+			if(strpos($key, $prefix) === 0)
+			{
+				$envVars[$key] = $value;
+				break;
+			}
+		}
+	}
+	$sources['env_vars'] = $envVars;
+	
+	// 2. Lokale Config-Datei
+	$localConfigFile = B1GMAIL_DIR . 'serverlib/protocols-config.local.php';
+	if(file_exists($localConfigFile))
+	{
+		$sources['local_file'] = $localConfigFile;
+	}
+	else
+	{
+		$sources['local_file'] = false;
+	}
+	
+	// 3. Datenbank
+	$dbConfigCount = 0;
+	if(isset($db))
+	{
+		try {
+			$res = $db->Query('SELECT COUNT(*) as cnt FROM {pre}protocols_config');
+			if($row = $res->FetchArray(MYSQLI_ASSOC))
+			{
+				$dbConfigCount = $row['cnt'];
+			}
+			$res->Free();
+		} catch(Exception $e) {
+			// DB nicht verfügbar
+		}
+	}
+	$sources['database'] = array(
+		'available' => isset($db),
+		'count' => $dbConfigCount
+	);
+	
+	return $sources;
+}
+
+/**
+ * Save protocol config
+ */
+function saveProtocolConfig($category)
+{
+	global $db;
+	
+	$saved = array();
+	$errors = array();
+	
+	// Get POST data
+	foreach($_POST as $key => $value)
+	{
+		if(strpos($key, 'config_') === 0)
+		{
+			$configKey = substr($key, 7); // Remove 'config_' prefix
+			
+			// Check if editable
+			$envVar = strtoupper($configKey);
+			$source = getConfigSource($configKey, $envVar);
+			
+			if(!$source['editable'])
+			{
+				$errors[] = "{$configKey}: Wird von {$source['detail']} überschrieben - kann nicht geändert werden";
+				continue;
+			}
+			
+			// Determine type
+			$type = 'string';
+			if(isset($_POST['type_' . $configKey]))
+			{
+				$type = $_POST['type_' . $configKey];
+			}
+			
+			// Save to database
+			if(setProtocolConfig($configKey, $value, $type))
+			{
+				$saved[] = $configKey;
+			}
+			else
+			{
+				$errors[] = "{$configKey}: Fehler beim Speichern";
+			}
+		}
+	}
+	
+	// Redirect with message
+	$message = count($saved) . ' Einstellungen gespeichert';
+	if(count($errors) > 0)
+	{
+		$message .= ' (' . count($errors) . ' Fehler)';
+	}
+	
+	header('Location: admin.php?page=bms&action=config&cat=' . $category . '&message=' . urlencode($message));
+	exit;
+}
+
+/**
+ * Test protocol connection
+ */
+function testProtocolConnection($category)
+{
+	$result = array(
+		'success' => false,
+		'message' => '',
+		'details' => array()
+	);
+	
+	switch($category)
+	{
+		case 'cyrus':
+			$result = testCyrusConnection();
+			break;
+		
+		case 'grommunio':
+			$result = testGrommunioConnection();
+			break;
+		
+		case 'sftpgo':
+			$result = testSFTPGoConnection();
+			break;
+		
+		default:
+			$result['message'] = 'Test für diese Kategorie noch nicht implementiert';
+	}
+	
+	// Return JSON
+	header('Content-Type: application/json');
+	echo json_encode($result);
+	exit;
+}
+
+/**
+ * Test Cyrus connection
+ */
+function testCyrusConnection()
+{
+	$result = array('success' => false, 'message' => '', 'details' => array());
+	
+	try {
+		// Test IMAP connection
+		$server = constant('CYRUS_SERVER');
+		$port = constant('CYRUS_IMAP_PORT');
+		
+		$fp = @fsockopen($server, $port, $errno, $errstr, 5);
+		
+		if($fp)
+		{
+			$greeting = fgets($fp);
+			fclose($fp);
+			
+			$result['success'] = true;
+			$result['message'] = 'Cyrus IMAP Server erreichbar';
+			$result['details'][] = 'Greeting: ' . trim($greeting);
+		}
+		else
+		{
+			$result['message'] = "Verbindung fehlgeschlagen: {$errstr} ({$errno})";
+		}
+	}
+	catch(Exception $e)
+	{
+		$result['message'] = 'Fehler: ' . $e->getMessage();
+	}
+	
+	return $result;
+}
+
+/**
+ * Test Grommunio connection
+ */
+function testGrommunioConnection()
+{
+	$result = array('success' => false, 'message' => '', 'details' => array());
+	
+	try {
+		require_once(B1GMAIL_DIR . '/serverlib/grommunio-bridge.inc.php');
+		
+		$bridge = getSFTPGoBridge();
+		$test = $bridge->test();
+		
+		$result['success'] = $test['connected'];
+		$result['message'] = $test['connected'] ? 'Grommunio API erreichbar' : 'Verbindung fehlgeschlagen';
+		$result['details'][] = 'Version: ' . $test['version'];
+		
+		if(!empty($test['error']))
+		{
+			$result['details'][] = 'Fehler: ' . $test['error'];
+		}
+	}
+	catch(Exception $e)
+	{
+		$result['message'] = 'Fehler: ' . $e->getMessage();
+	}
+	
+	return $result;
+}
+
+/**
+ * Test SFTPGo connection
+ */
+function testSFTPGoConnection()
+{
+	$result = array('success' => false, 'message' => '', 'details' => array());
+	
+	try {
+		require_once(B1GMAIL_DIR . '/serverlib/sftpgo-bridge.inc.php');
+		
+		$bridge = getSFTPGoBridge();
+		$test = $bridge->test();
+		
+		$result['success'] = $test['connected'];
+		$result['message'] = $test['connected'] ? 'SFTPGo API erreichbar' : 'Verbindung fehlgeschlagen';
+		$result['details'][] = 'Version: ' . $test['version'];
+		
+		if(!empty($test['error']))
+		{
+			$result['details'][] = 'Fehler: ' . $test['error'];
+		}
+	}
+	catch(Exception $e)
+	{
+		$result['message'] = 'Fehler: ' . $e->getMessage();
+	}
+	
+	return $result;
+}
+
+/**
+ * Backup config to JSON
+ */
+function backupConfig()
+{
+	global $db;
+	
+	$backup = array(
+		'timestamp' => time(),
+		'date' => date('Y-m-d H:i:s'),
+		'version' => '1.0',
+		'config' => array()
+	);
+	
+	// Get all config from database
+	$res = $db->Query('SELECT * FROM {pre}protocols_config ORDER BY category, config_key');
+	
+	while($row = $res->FetchArray(MYSQLI_ASSOC))
+	{
+		$backup['config'][] = $row;
+	}
+	
+	$res->Free();
+	
+	// Send as download
+	header('Content-Type: application/json');
+	header('Content-Disposition: attachment; filename="b1gmail-protocols-config-' . date('Y-m-d') . '.json"');
+	echo json_encode($backup, JSON_PRETTY_PRINT);
+	exit;
+}
+
+/**
+ * Restore config from JSON
+ */
+function restoreConfig()
+{
+	global $db;
+	
+	if(!isset($_FILES['config_file']))
+	{
+		header('Location: admin.php?page=bms&action=config&error=no_file');
+		exit;
+	}
+	
+	$json = file_get_contents($_FILES['config_file']['tmp_name']);
+	$backup = json_decode($json, true);
+	
+	if(!$backup || !isset($backup['config']))
+	{
+		header('Location: admin.php?page=bms&action=config&error=invalid_file');
+		exit;
+	}
+	
+	$restored = 0;
+	
+	foreach($backup['config'] as $row)
+	{
+		if(setProtocolConfig($row['config_key'], $row['config_value'], $row['config_type']))
+		{
+			$restored++;
+		}
+	}
+	
+	header('Location: admin.php?page=bms&action=config&message=' . urlencode("{$restored} Einstellungen wiederhergestellt"));
+	exit;
+}
+
+/**
+ * Reset config to defaults
+ */
+function resetConfig($category)
+{
+	global $db;
+	
+	// Delete all config for category from database
+	$db->Query('DELETE FROM {pre}protocols_config WHERE category=?', $category);
+	
+	header('Location: admin.php?page=bms&action=config&cat=' . $category . '&message=' . urlencode('Konfiguration zurückgesetzt'));
+	exit;
+}
+
+?>

@@ -283,6 +283,92 @@ define('BM_UPDATE_AVAILABLE', 2);
  */
 include B1GMAIL_DIR.'serverlib/config.inc.php';
 
+/**
+ * PRODUCTION HARDENING - ERROR HANDLING
+ * 
+ * Set error reporting and logging based on DEBUG_MODE
+ */
+if (DEBUG_MODE) {
+	// Development: Show all errors
+	error_reporting(E_ALL);
+	ini_set('display_errors', '1');
+	ini_set('display_startup_errors', '1');
+	ini_set('log_errors', '1');
+} else {
+	// Production: Log errors, don't display
+	error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+	ini_set('display_errors', '0');
+	ini_set('display_startup_errors', '0');
+	ini_set('log_errors', '1');
+	
+	// Set error log path
+	if (defined('ERROR_LOG_PATH') && is_writable(dirname(ERROR_LOG_PATH))) {
+		ini_set('error_log', ERROR_LOG_PATH);
+	}
+	
+	// Custom error handler for production
+	set_error_handler(function($errno, $errstr, $errfile, $errline) {
+		// Log to file
+		error_log(sprintf('[%s] %s in %s on line %d', 
+			date('Y-m-d H:i:s'), $errstr, $errfile, $errline));
+		
+		// Don't expose internals to user
+		if ($errno === E_ERROR || $errno === E_USER_ERROR) {
+			if (!headers_sent()) {
+				header('HTTP/1.1 500 Internal Server Error');
+			}
+			echo '<!DOCTYPE html><html><head><title>Error</title></head><body>';
+			echo '<h1>An error occurred</h1>';
+			echo '<p>The system encountered an error. Please try again later.</p>';
+			echo '</body></html>';
+			exit(1);
+		}
+		
+		return false; // Let PHP's default handler run for other errors
+	});
+}
+
+/**
+ * PRODUCTION HARDENING - SECURE SESSION COOKIES
+ * 
+ * Enable secure cookies when HTTPS is active
+ */
+if (HTTPS_ENABLED) {
+	ini_set('session.cookie_secure', '1');
+	ini_set('session.cookie_httponly', '1');
+	ini_set('session.cookie_samesite', 'Strict');
+}
+
+/**
+ * PRODUCTION HARDENING - HTTP SECURITY HEADERS
+ * 
+ * Add security headers to all responses
+ */
+if (!headers_sent()) {
+	// Content Security Policy - Allow inline scripts/styles for now (can be tightened)
+	header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;");
+	
+	// Enforce HTTPS for 1 year (only if HTTPS is enabled)
+	if (HTTPS_ENABLED) {
+		header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
+	}
+	
+	// Prevent clickjacking
+	header("X-Frame-Options: SAMEORIGIN");
+	
+	// Prevent MIME sniffing
+	header("X-Content-Type-Options: nosniff");
+	
+	// Referrer Policy
+	header("Referrer-Policy: strict-origin-when-cross-origin");
+	
+	// XSS Protection (legacy but still useful)
+	header("X-XSS-Protection: 1; mode=block");
+	
+	// Remove X-Powered-By header
+	header_remove("X-Powered-By");
+}
+
 if (!defined('TOOLBOX_SERVER')) {
     define('TOOLBOX_SERVER', '');
 }
@@ -474,4 +560,4 @@ if (isset($_GET['noMobileRedirect'])) {
 /*
  * after init module handler
  */
-ModuleFunction('AfterInit');
+// ModuleFunction('AfterInit');

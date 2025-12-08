@@ -3843,3 +3843,64 @@ function SetTimeZoneByOffsetSeconds($offset)
 
 	return(false);
 }
+
+/**
+ * CSRF Protection Functions
+ * 
+ * Added: 2025-12-08
+ * Security enhancement for form submissions
+ */
+
+/**
+ * Generate CSRF token
+ * Creates a cryptographically secure token and stores it in session
+ * 
+ * @return string The generated CSRF token
+ */
+function generateCsrfToken()
+{
+	if(!isset($_SESSION)) {
+		session_start();
+	}
+	
+	if(!isset($_SESSION['csrf_token']) || !isset($_SESSION['csrf_token_time']) 
+		|| (time() - $_SESSION['csrf_token_time']) > 3600) {
+		// Generate new token (32 bytes = 64 hex chars)
+		$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+		$_SESSION['csrf_token_time'] = time();
+	}
+	
+	return $_SESSION['csrf_token'];
+}
+
+/**
+ * Validate CSRF token
+ * Uses timing-safe comparison to prevent timing attacks
+ * 
+ * @param string $token The token to validate
+ * @return bool True if valid, false otherwise
+ */
+function validateCsrfToken($token)
+{
+	if(!isset($_SESSION)) {
+		session_start();
+	}
+	
+	if(!isset($_SESSION['csrf_token']) || empty($token)) {
+		return false;
+	}
+	
+	// Timing-safe comparison
+	return hash_equals($_SESSION['csrf_token'], $token);
+}
+
+/**
+ * Get CSRF token HTML input field
+ * Convenience function for forms
+ * 
+ * @return string HTML input field with CSRF token
+ */
+function getCsrfTokenField()
+{
+	return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(generateCsrfToken()) . '">';
+}

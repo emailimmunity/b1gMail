@@ -1,0 +1,31 @@
+/* Mint Green - Fresh mint flavor */
+
+:root {
+  --primary-color: #4CAF50;
+  --secondary-color: #388E3C;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.header {
+  background: var(--primary-color);
+  color: white;
+  padding: 20px;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--secondary-color);
+}

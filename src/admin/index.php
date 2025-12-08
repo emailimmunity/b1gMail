@@ -23,6 +23,14 @@ include('../serverlib/admin.inc.php');
 
 if(isset($_REQUEST['action']) && $_REQUEST['action']=='login')
 {
+	// CSRF Protection
+	if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+		$tpl->assign('error', 'Invalid CSRF token. Please try again.');
+		$tpl->assign('timezone', date('Z'));
+		$tpl->display('login.tpl');
+		exit();
+	}
+	
 	$username 	= $_POST['username'];
 	$pw 		= $_POST['password'];
 
@@ -141,5 +149,6 @@ else if(isset($_REQUEST['action']) && $_REQUEST['action']=='logout')
 if(isset($_REQUEST['jump']))
 	$tpl->assign('jump', $_REQUEST['jump']);
 $tpl->assign('timezone', date('Z'));
+$tpl->assign('csrf_token_field', getCsrfTokenField());
 $tpl->display('login.tpl');
 ?>

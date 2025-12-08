@@ -1,0 +1,31 @@
+/* Cherry Red - Bold cherry color */
+
+:root {
+  --primary-color: #D32F2F;
+  --secondary-color: #B71C1C;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.header {
+  background: var(--primary-color);
+  color: white;
+  padding: 20px;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--secondary-color);
+}

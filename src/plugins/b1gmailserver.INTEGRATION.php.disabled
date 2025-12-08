@@ -1,0 +1,158 @@
+<?php
+/**
+ * DIESE DATEI WURDE DEAKTIVIERT
+ * 
+ * Die Integration wurde bereits in b1gmailserver.plugin.php durchgeführt!
+ * Backup: docs/INTEGRATION_ANLEITUNG_BACKUP.txt
+ * 
+ * Datum: 1. November 2025
+ */
+
+// File disabled to prevent parse errors
+// Integration already completed in b1gmailserver.plugin.php
+exit('This file is disabled. Integration already completed.');
+
+// ============================================================================
+// SCHRITT 2: Im Constructor (__construct) NACH den bestehenden RegisterGroupOption-Calls:
+// ============================================================================
+
+// Neue Gruppen-Optionen für Cyrus
+$this->RegisterGroupOption('cyrus_quota_mb',
+	FIELD_TEXT,
+	'Cyrus Quota (MB):',
+	'',
+	1000);
+$this->RegisterGroupOption('cyrus_jmap_enabled',
+	FIELD_CHECKBOX,
+	'Cyrus JMAP aktivieren?',
+	'',
+	false);
+$this->RegisterGroupOption('cyrus_sieve_enabled',
+	FIELD_CHECKBOX,
+	'Cyrus Sieve (Filter) aktivieren?',
+	'',
+	true);
+
+// Neue Gruppen-Optionen für Grommunio
+$this->RegisterGroupOption('grommunio_mapi_enabled',
+	FIELD_CHECKBOX,
+	'Grommunio MAPI (Outlook) aktivieren?',
+	'',
+	true);
+$this->RegisterGroupOption('grommunio_ews_enabled',
+	FIELD_CHECKBOX,
+	'Grommunio EWS (Exchange) aktivieren?',
+	'',
+	true);
+$this->RegisterGroupOption('grommunio_eas_enabled',
+	FIELD_CHECKBOX,
+	'Grommunio ActiveSync (Mobile) aktivieren?',
+	'',
+	true);
+$this->RegisterGroupOption('grommunio_sync_realtime',
+	FIELD_CHECKBOX,
+	'Grommunio Realtime-Sync?',
+	'',
+	true);
+
+// Neue Gruppen-Optionen für SFTPGo
+$this->RegisterGroupOption('sftpgo_quota_mb',
+	FIELD_TEXT,
+	'SFTPGo Quota (MB):',
+	'',
+	5000);
+$this->RegisterGroupOption('sftpgo_s3_enabled',
+	FIELD_CHECKBOX,
+	'SFTPGo S3-API aktivieren?',
+	'',
+	false);
+$this->RegisterGroupOption('sftpgo_webdav_enabled',
+	FIELD_CHECKBOX,
+	'SFTPGo WebDAV aktivieren?',
+	'',
+	true);
+$this->RegisterGroupOption('sftpgo_public_keys_enabled',
+	FIELD_CHECKBOX,
+	'SFTPGo Public-Key-Auth aktivieren?',
+	'',
+	true);
+
+// ============================================================================
+// SCHRITT 3: In der AdminPage() Funktion, beim $_REQUEST['do'] Routing:
+// ============================================================================
+
+// NEUE Admin-Pages
+else if($_REQUEST['do'] == 'cyrus')
+{
+	require_once(__DIR__ . '/pages/cyrus-status.page.php');
+	$page = renderCyrusStatusPage($this, $tpl);
+	$tpl->assign('pageURL', $this->_adminLink('&do=cyrus'));
+	$tpl->assign('page', $page);
+}
+else if($_REQUEST['do'] == 'grommunio')
+{
+	require_once(__DIR__ . '/pages/grommunio-status.page.php');
+	$page = renderGrommunioStatusPage($this, $tpl);
+	$tpl->assign('pageURL', $this->_adminLink('&do=grommunio'));
+	$tpl->assign('page', $page);
+}
+else if($_REQUEST['do'] == 'sftpgo')
+{
+	require_once(__DIR__ . '/pages/sftpgo-status.page.php');
+	$page = renderSFTPGoStatusPage($this, $tpl);
+	$tpl->assign('pageURL', $this->_adminLink('&do=sftpgo'));
+	$tpl->assign('page', $page);
+}
+else if($_REQUEST['do'] == 'postfix')
+{
+	require_once(__DIR__ . '/pages/postfix-status.page.php');
+	$page = renderPostfixStatusPage($this, $tpl);
+	$tpl->assign('pageURL', $this->_adminLink('&do=postfix'));
+	$tpl->assign('page', $page);
+}
+else if($_REQUEST['do'] == 'dashboard' || $_REQUEST['do'] == 'modern_stats')
+{
+	require_once(__DIR__ . '/pages/modern-stats.page.php');
+	$page = renderModernStatsDashboard($this, $tpl);
+	$tpl->assign('pageURL', $this->_adminLink('&do=dashboard'));
+	$tpl->assign('page', $page);
+}
+
+// ============================================================================
+// SCHRITT 4: Die _getProtocols() Funktion ERSETZEN durch:
+// ============================================================================
+
+/**
+ * get allowed protocols for group (MODERNIZED)
+ */
+function _getProtocols($thisGroup)
+{
+	// Use helper function
+	return getGroupProtocols($thisGroup);
+}
+
+// ============================================================================
+// SCHRITT 5: Neue Helper-Funktionen am Ende der Klasse (vor dem letzten }):
+// ============================================================================
+
+/**
+ * Get template path helper
+ */
+function _templatePath($template)
+{
+	return dirname(__FILE__) . '/templates/' . $template;
+}
+
+/**
+ * Get admin link helper
+ */
+function _adminLink($params = '')
+{
+	return 'plugin.php?plugin=' . $this->name . $params;
+}
+
+// ============================================================================
+// FERTIG! Diese Änderungen müssen manuell ins Plugin eingefügt werden.
+// ============================================================================
+
+?>

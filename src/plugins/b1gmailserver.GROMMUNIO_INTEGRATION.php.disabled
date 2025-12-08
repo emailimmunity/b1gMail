@@ -1,0 +1,252 @@
+<?php
+/**
+ * ============================================================================
+ * GROMMUNIO INTEGRATION FOR b1gmailserver.plugin.php
+ * ============================================================================
+ * 
+ * Diese Datei enthält die Erweiterungen für das b1gMailServer Admin-Plugin
+ * um Grommunio (MAPI/EWS/EAS) Status und Verwaltung anzuzeigen.
+ * 
+ * Analog zu: Cyrus Integration
+ * 
+ * ============================================================================
+ */
+
+// ============================================================================
+// SCHRITT 1: Neue Konstanten (nach Zeile 36)
+// ============================================================================
+/* CODE EINFÜGEN nach:
+   define('BMS_CMP_JMAP', 2048);
+
+// Grommunio Components
+define('BMS_CMP_MAPI', 4096);
+define('BMS_CMP_EWS', 8192);
+define('BMS_CMP_EAS', 16384);
+define('BMS_CMP_RPC', 32768);
+
+*/
+
+// ============================================================================
+// SCHRITT 2: Grommunio Prefs laden (im __construct, nach Zeile 148)
+// ============================================================================
+/* CODE EINFÜGEN nach den Cyrus/JMAP Options:
+
+        // Grommunio Options
+        $this->RegisterGroupOption('grommunio_enabled',
+            FIELD_CHECKBOX,
+            'Grommunio (Outlook) aktiviert?',
+            '',
+            false);
+        $this->RegisterGroupOption('mapi_enabled',
+            FIELD_CHECKBOX,
+            'MAPI over HTTP aktiviert?',
+            '',
+            true);
+        $this->RegisterGroupOption('ews_enabled',
+            FIELD_CHECKBOX,
+            'Exchange Web Services aktiviert?',
+            '',
+            true);
+        $this->RegisterGroupOption('eas_enabled',
+            FIELD_CHECKBOX,
+            'Exchange ActiveSync aktiviert?',
+            '',
+            true);
+        $this->RegisterGroupOption('grommunio_max_devices',
+            FIELD_TEXT,
+            'Max. ActiveSync Geräte:',
+            '',
+            10);
+
+*/
+
+// ============================================================================
+// SCHRITT 3: Neue Admin-Seite für Grommunio (neue Methode)
+// ============================================================================
+/* CODE EINFÜGEN (neue Methode in der Klasse):
+
+    /**
+     * Grommunio Status Page
+     */
+    function GrommunioStatusPage()
+    {
+        global $db, $tpl;
+        
+        // Load Grommunio Bridge
+        if(!defined('GROMMUNIO_ENABLED') || !GROMMUNIO_ENABLED)
+        {
+            $tpl->assign('pageContent', '<div class="errorMessage">Grommunio ist nicht aktiviert!</div>');
+            return;
+        }
+        
+        require_once(B1GMAIL_DIR . '/serverlib/grommunio-bridge.inc.php');
+        require_once(B1GMAIL_DIR . '/serverlib/grommunio-config.inc.php');
+        
+        // Check Grommunio connection
+        $bridge = new BMGrommunioBridge();
+        $testResult = $bridge->test();
+        
+        // Get stats
+        $stats = array(
+            'connected' => $testResult['connected'],
+            'version' => $testResult['version'],
+            'total_users' => 0,
+            'migrated_users' => 0,
+            'pending_users' => 0,
+            'failed_users' => 0,
+            'active_sessions' => 0,
+            'total_devices' => 0,
+            'mapi_sessions' => 0,
+            'ews_sessions' => 0,
+            'eas_sessions' => 0
+        );
+        
+        // Count users
+        $res = $db->Query('SELECT COUNT(*) FROM {pre}users');
+        list($stats['total_users']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        $res = $db->Query('SELECT COUNT(*) FROM {pre}users WHERE grommunio_migrated="yes"');
+        list($stats['migrated_users']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        $stats['pending_users'] = $stats['total_users'] - $stats['migrated_users'];
+        
+        // Migration stats
+        $res = $db->Query('SELECT COUNT(*) FROM {pre}grommunio_migration WHERE status="failed"');
+        list($stats['failed_users']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        // Active sessions
+        $res = $db->Query('SELECT COUNT(*) FROM {pre}grommunio_sessions 
+                           WHERE last_activity > ?', time() - 3600);
+        list($stats['active_sessions']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        // Session breakdown
+        $res = $db->Query('SELECT protocol, COUNT(*) as count FROM {pre}grommunio_sessions 
+                           WHERE last_activity > ? GROUP BY protocol', time() - 3600);
+        while($row = $res->FetchArray(MYSQLI_ASSOC))
+        {
+            $protocol = strtolower($row['protocol']);
+            $stats[$protocol . '_sessions'] = $row['count'];
+        }
+        $res->Free();
+        
+        // Total devices
+        $res = $db->Query('SELECT COUNT(*) FROM {pre}grommunio_devices WHERE status="active"');
+        list($stats['total_devices']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        // Recent errors
+        $errors = array();
+        $res = $db->Query('SELECT * FROM {pre}grommunio_errors WHERE resolved="no" 
+                           ORDER BY timestamp DESC LIMIT 10');
+        while($row = $res->FetchArray(MYSQLI_ASSOC))
+        {
+            $errors[] = $row;
+        }
+        $res->Free();
+        
+        // Recent migrations
+        $migrations = array();
+        $res = $db->Query('SELECT * FROM {pre}grommunio_migration 
+                           WHERE status IN ("in_progress", "failed") 
+                           ORDER BY started DESC LIMIT 20');
+        while($row = $res->FetchArray(MYSQLI_ASSOC))
+        {
+            $migrations[] = $row;
+        }
+        $res->Free();
+        
+        // Top devices
+        $devices = array();
+        $res = $db->Query('SELECT d.*, u.email FROM {pre}grommunio_devices d
+                           LEFT JOIN {pre}users u ON d.userid=u.id
+                           WHERE d.status="active"
+                           ORDER BY d.last_sync DESC LIMIT 20');
+        while($row = $res->FetchArray(MYSQLI_ASSOC))
+        {
+            $devices[] = $row;
+        }
+        $res->Free();
+        
+        // Assign to template
+        $tpl->assign('grommunio_stats', $stats);
+        $tpl->assign('grommunio_errors', $errors);
+        $tpl->assign('grommunio_migrations', $migrations);
+        $tpl->assign('grommunio_devices', $devices);
+        $tpl->assign('pageContent', $this->_templatePath('bms.admin.grommunio.tpl'));
+    }
+
+*/
+
+// ============================================================================
+// SCHRITT 4: Link zur Grommunio-Seite im Admin-Menü
+// ============================================================================
+/* CODE EINFÜGEN in der AdminPage() Methode:
+
+        // Grommunio Status Link
+        if(defined('GROMMUNIO_ENABLED') && GROMMUNIO_ENABLED)
+        {
+            if(isset($_REQUEST['action']) && $_REQUEST['action'] == 'grommunio')
+            {
+                $this->GrommunioStatusPage();
+                return;
+            }
+        }
+
+*/
+
+// ============================================================================
+// SCHRITT 5: User-Interface - JMAP/Outlook Info (in UserPage() Methode)
+// ============================================================================
+/* CODE EINFÜGEN in UserPage():
+
+        // Grommunio Info
+        $tpl->assign('haveGrommunio', defined('GROMMUNIO_ENABLED') && GROMMUNIO_ENABLED);
+        
+        if(defined('GROMMUNIO_ENABLED') && GROMMUNIO_ENABLED)
+        {
+            $this->prefs['user_grommunio_server'] = GROMMUNIO_SERVER;
+            $this->prefs['user_mapi_url'] = GROMMUNIO_MAPI_URL;
+            $this->prefs['user_ews_url'] = GROMMUNIO_EWS_URL;
+            $this->prefs['user_eas_url'] = GROMMUNIO_EAS_URL;
+            $this->prefs['user_autodiscover_url'] = GROMMUNIO_AUTODISCOVER_URL;
+            
+            // Get user's ActiveSync devices
+            $devices = array();
+            $res = $db->Query('SELECT * FROM {pre}grommunio_devices 
+                               WHERE userid=? AND status="active"
+                               ORDER BY last_sync DESC', $userID);
+            while($row = $res->FetchArray(MYSQLI_ASSOC))
+            {
+                $devices[] = $row;
+            }
+            $res->Free();
+            
+            $tpl->assign('grommunio_devices', $devices);
+        }
+
+*/
+
+?>
+
+<!-- 
+============================================================================
+VERWENDUNG IM ADMIN-INTERFACE
+============================================================================
+
+Der Admin kann dann auf:
+admin.php?page=bms&action=grommunio
+
+zugreifen und sieht:
+
+- Grommunio Connection Status
+- Migrations-Fortschritt
+- MAPI/EWS/EAS Sessions
+- ActiveSync Geräte
+- Fehler-Log
+
+============================================================================
+-->

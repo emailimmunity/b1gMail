@@ -1,0 +1,176 @@
+<?php
+/**
+ * ============================================================================
+ * CYRUS INTEGRATION FOR b1gmailserver.plugin.php
+ * ============================================================================
+ * 
+ * Diese Datei enthält die Erweiterungen für das b1gMailServer Admin-Plugin
+ * um Cyrus IMAP Status und Verwaltung anzuzeigen.
+ * 
+ * Analog zu: CalDAV, CardDAV, WebDAV Stats
+ * 
+ * ============================================================================
+ */
+
+// ============================================================================
+// SCHRITT 1: Neue Konstanten (nach Zeile 36)
+// ============================================================================
+/* CODE EINFÜGEN nach:
+   define('BMS_CMP_WEBDAV', 512);
+
+// Cyrus IMAP Components
+define('BMS_CMP_CYRUS', 1024);
+define('BMS_CMP_JMAP', 2048);
+
+*/
+
+// ============================================================================
+// SCHRITT 2: Cyrus Prefs laden (im __construct, nach Zeile 148)
+// ============================================================================
+/* CODE EINFÜGEN nach den DAV Options:
+
+        // Cyrus IMAP Options
+        $this->RegisterGroupOption('cyrus_enabled',
+            FIELD_CHECKBOX,
+            'Cyrus IMAP aktiviert?',
+            '',
+            false);
+        $this->RegisterGroupOption('jmap_enabled',
+            FIELD_CHECKBOX,
+            'JMAP aktiviert?',
+            '',
+            false);
+
+*/
+
+// ============================================================================
+// SCHRITT 3: Neue Admin-Seite für Cyrus (neue Methode)
+// ============================================================================
+/* CODE EINFÜGEN (neue Methode in der Klasse):
+
+    /**
+     * Cyrus IMAP Status Page
+     */
+    function CyrusStatusPage()
+    {
+        global $db, $tpl;
+        
+        // Load Cyrus Bridge
+        if(!defined('CYRUS_ENABLED') || !CYRUS_ENABLED)
+        {
+            $tpl->assign('pageContent', '<div class="errorMessage">Cyrus IMAP ist nicht aktiviert!</div>');
+            return;
+        }
+        
+        require_once(B1GMAIL_DIR . '/serverlib/cyrus-bridge.inc.php');
+        require_once(B1GMAIL_DIR . '/serverlib/cyrus-config.inc.php');
+        
+        // Check Cyrus connection
+        $bridge = new BMCyrusBridge();
+        $connected = $bridge->connect();
+        
+        // Get stats
+        $stats = array(
+            'connection' => $connected ? 'success' : 'failed',
+            'total_users' => 0,
+            'migrated_users' => 0,
+            'pending_users' => 0,
+            'failed_users' => 0,
+            'total_mailboxes' => 0,
+            'total_quota_used' => 0,
+            'total_quota_limit' => 0,
+            'total_messages' => 0,
+            'jmap_enabled' => CYRUS_JMAP_ENABLED,
+            'jmap_url' => CYRUS_JMAP_URL
+        );
+        
+        // Count users
+        $res = $db->Query('SELECT COUNT(*) FROM {pre}users');
+        list($stats['total_users']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        $res = $db->Query('SELECT COUNT(*) FROM {pre}users WHERE cyrus_migrated="yes"');
+        list($stats['migrated_users']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        $stats['pending_users'] = $stats['total_users'] - $stats['migrated_users'];
+        
+        // Migration stats
+        $res = $db->Query('SELECT COUNT(*) FROM {pre}cyrus_migration WHERE status="failed"');
+        list($stats['failed_users']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        // Mailbox stats
+        $res = $db->Query('SELECT COUNT(*), SUM(quota_used), SUM(quota_limit), SUM(message_count) 
+                           FROM {pre}cyrus_mailboxes');
+        list($stats['total_mailboxes'], $stats['total_quota_used'], 
+             $stats['total_quota_limit'], $stats['total_messages']) = $res->FetchArray(MYSQLI_NUM);
+        $res->Free();
+        
+        // Recent errors
+        $errors = array();
+        $res = $db->Query('SELECT * FROM {pre}cyrus_errors WHERE resolved="no" 
+                           ORDER BY timestamp DESC LIMIT 10');
+        while($row = $res->FetchArray(MYSQLI_ASSOC))
+        {
+            $errors[] = $row;
+        }
+        $res->Free();
+        
+        // Recent migrations
+        $migrations = array();
+        $res = $db->Query('SELECT * FROM {pre}cyrus_migration 
+                           WHERE status IN ("in_progress", "failed") 
+                           ORDER BY started DESC LIMIT 20');
+        while($row = $res->FetchArray(MYSQLI_ASSOC))
+        {
+            $migrations[] = $row;
+        }
+        $res->Free();
+        
+        // Assign to template
+        $tpl->assign('cyrus_stats', $stats);
+        $tpl->assign('cyrus_errors', $errors);
+        $tpl->assign('cyrus_migrations', $migrations);
+        $tpl->assign('pageContent', $this->_templatePath('bms.admin.cyrus.tpl'));
+    }
+
+*/
+
+// ============================================================================
+// SCHRITT 4: Link zur Cyrus-Seite im Admin-Menü
+// ============================================================================
+/* CODE EINFÜGEN in der AdminPage() Methode:
+
+        // Cyrus Status Link
+        if(defined('CYRUS_ENABLED') && CYRUS_ENABLED)
+        {
+            if(isset($_REQUEST['action']) && $_REQUEST['action'] == 'cyrus')
+            {
+                $this->CyrusStatusPage();
+                return;
+            }
+        }
+
+*/
+
+?>
+
+<!-- 
+============================================================================
+VERWENDUNG IM ADMIN-INTERFACE
+============================================================================
+
+Der Admin kann dann auf:
+admin.php?page=bms&action=cyrus
+
+zugreifen und sieht:
+
+- Cyrus Connection Status
+- Migrations-Fortschritt
+- Quota-Übersicht
+- Fehler-Log
+- JMAP Status
+
+============================================================================
+-->

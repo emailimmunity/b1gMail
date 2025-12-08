@@ -1,0 +1,359 @@
+<?php
+/**
+ * SSL Certificate Manager Plugin
+ * Zentrale SSL-Verwaltung mit Let's Encrypt Integration
+ * (c) 2025 b1gMail Development
+ */
+
+class SSLManager_Plugin extends BMPlugin
+{
+	// Plugin metadata (required by b1gMail plugin system)
+	var $type = 'admin';
+	var $name = 'SSL Manager';
+	var $version = '1.0.0';
+	var $author = 'b1gMail Development';
+	var $description = 'Zentrale Verwaltung von SSL-Zertifikaten mit Let\'s Encrypt Integration';
+	var $id = 'sslmanager';
+	var $order = 100;
+	
+	private $sslManager = null;
+	private $loadError = null;
+	
+	/**
+	 * OnLoad - Called when plugin is loaded
+	 */
+	function OnLoad()
+	{
+		// Plugin loaded - do nothing here to avoid early errors
+	}
+	
+	/**
+	 * OnStart - Initialize plugin (safe mode)
+	 */
+	function OnStart()
+	{
+		try {
+			global $plugins;
+			
+			// Register admin page
+			if(isset($plugins) && is_object($plugins) && method_exists($plugins, 'registerAdminPage')) {
+				$plugins->registerAdminPage('sslmanager', 
+					'SSL-Zertifikate', 
+					'../plugins/templates/images/bms_logo.png'
+				);
+			}
+		} catch(Exception $e) {
+			// Silently fail - don't break the whole system
+			$this->loadError = $e->getMessage();
+			if(function_exists('error_log')) {
+				error_log('SSLManager Plugin OnStart Error: ' . $e->getMessage());
+			}
+		}
+	}
+	
+	/**
+	 * Get SSL Manager instance (lazy loading with error handling)
+	 */
+	private function _getSSLManager()
+	{
+		if($this->sslManager === null)
+		{
+			try {
+				if(!defined('B1GMAIL_DIR')) {
+					throw new Exception('B1GMAIL_DIR not defined');
+				}
+				
+				$sslManagerFile = B1GMAIL_DIR . 'serverlib/ssl-manager.inc.php';
+				if(!file_exists($sslManagerFile)) {
+					throw new Exception('ssl-manager.inc.php not found');
+				}
+				
+				require_once($sslManagerFile);
+				
+				if(!class_exists('SSLManager')) {
+					throw new Exception('SSLManager class not found');
+				}
+				
+				$this->sslManager = new SSLManager();
+			} catch(Exception $e) {
+				error_log('SSLManager instantiation error: ' . $e->getMessage());
+				return null;
+			}
+		}
+		return $this->sslManager;
+	}
+	
+	/**
+	 * OnAdmin - Admin interface
+	 */
+	function OnAdmin()
+	{
+		global $tpl;
+		
+		try {
+			// Check for load errors
+			if($this->loadError) {
+				throw new Exception('Plugin load error: ' . $this->loadError);
+			}
+			
+			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : 'overview';
+			
+			switch($action)
+			{
+				case 'overview':
+					$this->_adminOverview($tpl);
+					break;
+					
+				case 'create':
+					$this->_adminCreate($tpl);
+					break;
+					
+				case 'discovery':
+					$this->_adminDiscovery($tpl);
+					break;
+					
+				case 'settings':
+					$this->_adminSettings($tpl);
+					break;
+					
+				case 'delete':
+					$this->_adminDelete();
+					break;
+					
+				case 'renew':
+					$this->_adminRenew();
+					break;
+					
+				default:
+					$this->_adminOverview($tpl);
+			}
+		} catch(Exception $e) {
+			$tpl->assign('error', $e->getMessage());
+			$tpl->assign('page', '../plugins/templates/sslm.admin.error.tpl');
+		}
+	}
+	
+	/**
+	 * Overview Page
+	 */
+	function _adminOverview(&$tpl)
+	{
+		$manager = $this->_getSSLManager();
+		
+		if(!$manager) {
+			throw new Exception('SSL Manager konnte nicht geladen werden. Bitte prüfe die Installation.');
+		}
+		
+		$certificates = $manager->getAllCertificates();
+		
+		// Statistics
+		$stats = array(
+			'total' => 0,
+			'active' => 0,
+			'expiring_soon' => 0,
+			'expired' => 0
+		);
+		
+		foreach($certificates as $cert)
+		{
+			$stats['total']++;
+			
+			if($cert['status'] === 'active')
+			{
+				$stats['active']++;
+				
+				if(isset($cert['days_until_expiry']) && $cert['days_until_expiry'] <= 30)
+				{
+					$stats['expiring_soon']++;
+				}
+			}
+			elseif($cert['status'] === 'expired')
+			{
+				$stats['expired']++;
+			}
+		}
+		
+		$tpl->assign('certificates', $certificates);
+		$tpl->assign('stats', $stats);
+		$tpl->assign('pageURL', $this->_adminLink());
+		$tpl->assign('page', '../plugins/templates/sslm.admin.overview.tpl');
+	}
+	
+	/**
+	 * Create Certificate Page
+	 */
+	function _adminCreate(&$tpl)
+	{
+		$manager = $this->_getSSLManager();
+		
+		if(!$manager) {
+			throw new Exception('SSL Manager konnte nicht geladen werden.');
+		}
+		
+		// Handle form submission
+		if(isset($_POST['create']) && function_exists('IsPOSTRequest') && IsPOSTRequest())
+		{
+			$type = $_POST['cert_type'] ?? 'single';
+			$domains = array();
+			
+			if($type === 'wildcard')
+			{
+				$baseDomain = $_POST['base_domain'] ?? '';
+				$domains[] = '*.' . $baseDomain;
+			}
+			elseif($type === 'san')
+			{
+				$selectedDomains = $_POST['selected_domains'] ?? array();
+				$domains = $selectedDomains;
+			}
+			else
+			{
+				$domains[] = $_POST['single_domain'] ?? '';
+			}
+			
+			// Create certificate
+			$result = $manager->createCertificate(array(
+				'domains' => $domains,
+				'type' => $type,
+				'issuer' => 'letsencrypt',
+				'auto_renew' => isset($_POST['auto_renew']) ? 1 : 0
+			));
+			
+			$tpl->assign('createResult', $result);
+		}
+		
+		// Get discovered domains
+		$discoveredDomains = $manager->discoverDomainsFromProtocols();
+		
+		$tpl->assign('discovered_domains', $discoveredDomains);
+		$tpl->assign('pageURL', $this->_adminLink('&action=create'));
+		$tpl->assign('page', '../plugins/templates/sslm.admin.create.tpl');
+	}
+	
+	/**
+	 * Discovery Page
+	 */
+	function _adminDiscovery(&$tpl)
+	{
+		$manager = $this->_getSSLManager();
+		
+		if(!$manager) {
+			throw new Exception('SSL Manager konnte nicht geladen werden.');
+		}
+		
+		$discoveredDomains = $manager->discoverDomainsFromProtocols();
+		
+		// Analyze each domain
+		foreach($discoveredDomains as $domain => &$data)
+		{
+			$suggestion = $manager->suggestWildcard($domain);
+			$data['wildcard_suggestion'] = $suggestion;
+		}
+		
+		$tpl->assign('discovered_domains', $discoveredDomains);
+		$tpl->assign('pageURL', $this->_adminLink('&action=discovery'));
+		$tpl->assign('page', '../plugins/templates/sslm.admin.discovery.tpl');
+	}
+	
+	/**
+	 * Settings Page
+	 */
+	function _adminSettings(&$tpl)
+	{
+		global $db;
+		
+		// Save settings
+		if(isset($_POST['save']) && function_exists('IsPOSTRequest') && IsPOSTRequest())
+		{
+			// Check if columns exist
+			$res = $db->Query('SHOW COLUMNS FROM {pre}config LIKE "ssl_acme_email"');
+			$columnExists = ($res->FetchArray() !== false);
+			$res->Free();
+			
+			if(!$columnExists) {
+				// Add columns
+				$db->Query('ALTER TABLE {pre}config 
+					ADD COLUMN ssl_acme_email VARCHAR(255) DEFAULT "",
+					ADD COLUMN ssl_acme_production TINYINT(1) DEFAULT 0,
+					ADD COLUMN ssl_auto_renew_days INT DEFAULT 30
+				');
+			}
+			
+			$db->Query('UPDATE {pre}config SET
+				ssl_acme_email=?,
+				ssl_acme_production=?,
+				ssl_auto_renew_days=?',
+				$_POST['acme_email'] ?? '',
+				isset($_POST['acme_production']) ? 1 : 0,
+				(int)($_POST['auto_renew_days'] ?? 30)
+			);
+			
+			$tpl->assign('saveResult', array('success' => true, 'message' => 'Einstellungen gespeichert'));
+		}
+		
+		// Load settings
+		$res = $db->Query('SELECT * FROM {pre}config LIMIT 1');
+		$config = $res->FetchArray(MYSQLI_ASSOC);
+		$res->Free();
+		
+		// Set defaults if not exists
+		if(!isset($config['ssl_acme_email'])) $config['ssl_acme_email'] = '';
+		if(!isset($config['ssl_acme_production'])) $config['ssl_acme_production'] = 0;
+		if(!isset($config['ssl_auto_renew_days'])) $config['ssl_auto_renew_days'] = 30;
+		
+		$tpl->assign('config', $config);
+		$tpl->assign('pageURL', $this->_adminLink('&action=settings'));
+		$tpl->assign('page', '../plugins/templates/sslm.admin.settings.tpl');
+	}
+	
+	/**
+	 * Delete Certificate
+	 */
+	function _adminDelete()
+	{
+		$manager = $this->_getSSLManager();
+		
+		if($manager && isset($_GET['id']))
+		{
+			$manager->deleteCertificate($_GET['id']);
+		}
+		
+		header('Location: ' . $this->_adminLink());
+		die();
+	}
+	
+	/**
+	 * Renew Certificate
+	 */
+	function _adminRenew()
+	{
+		$manager = $this->_getSSLManager();
+		
+		if($manager && isset($_GET['id']))
+		{
+			require_once(B1GMAIL_DIR . 'serverlib/acme-client.inc.php');
+			$cert = $manager->getCertificate($_GET['id']);
+			
+			if($cert && isset($cert['acme_account_id']) && $cert['acme_account_id'])
+			{
+				$acme = new AcmeClient(true, $cert['acme_account_id']);
+				// TODO: Implement renewal
+			}
+		}
+		
+		header('Location: ' . $this->_adminLink());
+		die();
+	}
+	
+	/**
+	 * Helper: Admin Link
+	 */
+	private function _adminLink($append = '')
+	{
+		global $sid;
+		return 'index.php?sid=' . $sid . '&site=sslmanager' . $append;
+	}
+}
+
+// Register plugin
+$plugins->registerPlugin('SSLManager_Plugin');

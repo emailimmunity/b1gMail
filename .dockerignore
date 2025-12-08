@@ -1,0 +1,56 @@
+# Docker Ignore File für b1gMail
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.sublime-*
+
+# Logs
+*.log
+logs/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporäre Dateien
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Backup Dateien
+*.bak
+*.backup
+*.old
+
+# Node Modules (falls vorhanden)
+node_modules/
+
+# Dokumentation (wird nicht im Container benötigt)
+*.md
+docs/
+
+# Docker selbst
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Windows Batch Files
+*.bat
+
+# Test-Daten
+tests/
+test/
+
+# Build Artifacts
+build/
+dist/

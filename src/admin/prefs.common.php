@@ -80,6 +80,11 @@ if($_REQUEST['action'] == 'common')
 		&& isset($_POST['titel'])
 		&& isset($_POST['language']))
 	{
+		// CSRF Protection
+		if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+			die('CSRF token validation failed');
+		}
+		
 		// trailing slashes
 		if(substr($_POST['selfurl'], -1) != '/')
 			$_POST['selfurl'] .= '/';
@@ -173,6 +178,11 @@ else if($_REQUEST['action'] == 'caching')
 {
 	if(isset($_REQUEST['save']))
 	{
+		// CSRF Protection
+		if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+			die('CSRF token validation failed');
+		}
+		
 		$serversArray = explode("\n", $_REQUEST['memcache_servers']);
 		foreach($serversArray as $key=>$val)
 			if(($val = trim($val)) != '')
@@ -213,6 +223,11 @@ else if($_REQUEST['action'] == 'captcha')
 
 	if(isset($_REQUEST['save']) && isset($_POST['captcha_provider']))
 	{
+		// CSRF Protection
+		if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+			die('CSRF token validation failed');
+		}
+		
 		$postPrefs = isset($_POST['prefs']) && is_array($_POST['prefs']) ? $_POST['prefs'] : array();
 		$config = array();
 
@@ -273,6 +288,11 @@ else if($_REQUEST['action'] == 'signup')
 {
 	if(isset($_REQUEST['save']))
 	{
+		// CSRF Protection
+		if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+			die('CSRF token validation failed');
+		}
+		
 		$lamArray = explode("\n", $_POST['locked_altmail']);
 		foreach($lamArray as $key=>$val)
 			if(($val = trim($val)) != '')
@@ -523,6 +543,11 @@ else if($_REQUEST['action'] == 'taborder')
 	// save?
 	if(isset($_REQUEST['save']) && isset($_REQUEST['order']) && is_array($_REQUEST['order']))
 	{
+		// CSRF Protection
+		if(!validateCsrfToken($_POST['csrf_token'] ?? '')) {
+			die('CSRF token validation failed');
+		}
+		
 		foreach($_REQUEST['order'] as $key=>$order)
 			$tabOrder[$key] = $order;
 		$db->Query('UPDATE {pre}prefs SET `taborder`=?',

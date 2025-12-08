@@ -1,0 +1,244 @@
+<?php
+/**
+ * ModernFrontend CMS Plugin - CORRECTED VERSION
+ * Uses AdminHandler() instead of OnAdminCustomPage()
+ */
+
+// Konstanten nur definieren wenn nicht schon definiert
+if(!defined('MODERNFRONTEND_VERSION'))
+	define('MODERNFRONTEND_VERSION', '1.0.0');
+if(!defined('MODERNFRONTEND_PATH'))
+	define('MODERNFRONTEND_PATH', B1GMAIL_DIR . 'plugins/modernfrontend/');
+if(!defined('MODERNFRONTEND_URL'))
+	define('MODERNFRONTEND_URL', B1GMAIL_REL . 'plugins/modernfrontend/');
+
+class ModernFrontendPlugin extends BMPlugin
+{
+	private $settings = array();
+	private $theme = array();
+	
+	function __construct()
+	{
+		$this->type 			= BMPLUGIN_DEFAULT;
+		$this->name 			= 'ModernFrontend CMS';
+		$this->author 			= 'aikQ';
+		$this->version 			= MODERNFRONTEND_VERSION;
+		$this->website			= 'https://aikq.de';
+		$this->updateURL		= '';
+		$this->configurable		= true;
+		
+		$this->admin_pages 		= array(
+			'dashboard'			=> 'Dashboard',
+			'content'			=> 'Content Editor',
+			'media'			=> 'Media Library',
+			'theme'			=> 'Theme Editor',
+			'pagebuilder'		=> 'Page Builder',
+			'packages'			=> 'Package Builder',
+			'analytics'			=> 'Analytics',
+			'abtesting'			=> 'A/B Testing',
+			'forms'				=> 'Contact Forms',
+			'emails'			=> 'Email Templates',
+			'settings'			=> 'Settings'
+		);
+		
+		$this->_loadSettings();
+		$this->_loadTheme();
+	}
+	
+	function Install()
+	{
+		global $db;
+		
+		PutLog('ModernFrontend: Installing plugin...', PRIO_NOTE, __FILE__, __LINE__);
+		
+		$sqlFile = MODERNFRONTEND_PATH . 'sql/install.sql';
+		if(file_exists($sqlFile))
+		{
+			$sql = file_get_contents($sqlFile);
+			$queries = explode(';', $sql);
+			
+			foreach($queries as $query)
+			{
+				$query = trim($query);
+				if(!empty($query) && substr($query, 0, 2) != '--')
+				{
+					try {
+						$db->Query($query);
+					} catch(Exception $e) {
+						PutLog('ModernFrontend: SQL Error - ' . $e->getMessage(), PRIO_WARNING, __FILE__, __LINE__);
+					}
+				}
+			}
+		}
+		
+		$this->_createDirectories();
+		
+		PutLog('ModernFrontend: Installation completed', PRIO_NOTE, __FILE__, __LINE__);
+		
+		return true;
+	}
+	
+	function Uninstall()
+	{
+		global $db;
+		
+		$tables = array(
+			'mf_content', 'mf_media', 'mf_media_folders',
+			'mf_pages', 'mf_sections', 'mf_theme',
+			'mf_analytics', 'mf_ab_tests', 'mf_ab_results',
+			'mf_email_templates', 'mf_contact_forms',
+			'mf_contact_submissions', 'mf_settings'
+		);
+		
+		foreach($tables as $table)
+		{
+			$db->Query('DROP TABLE IF EXISTS {pre}' . $table);
+		}
+		
+		return true;
+	}
+	
+	function AdminHandler()
+	{
+		global $tpl, $db, $admin;
+		
+		// Security check
+		// Security check
+		if(!isset($admin) || !is_object($admin) || !$admin->isLoggedIn())
+			return false;
+		
+		// Get page from REQUEST (WICHTIG: Nicht als Parameter!)
+		$page = isset($_REQUEST['page']) ? $_REQUEST['page'] : 'dashboard';
+		
+		// KRITISCH: Falls $page leer, auf dashboard setzen
+		if(empty($page) || !is_string($page))
+		{
+			$page = 'dashboard';
+			PutLog('ModernFrontend: $page was empty, defaulting to dashboard', PRIO_WARNING, __FILE__, __LINE__);
+		}
+		
+		// Sanitize page name
+		$page = preg_replace('/[^a-z0-9]/i', '', $page);
+		
+		// Falls nach Sanitizing leer, auf dashboard setzen
+		if(empty($page))
+		{
+			$page = 'dashboard';
+			PutLog('ModernFrontend: $page empty after sanitize, using dashboard', PRIO_WARNING, __FILE__, __LINE__);
+		}
+		
+		// Logging für Debug
+		PutLog('ModernFrontend: Loading page=' . $page, PRIO_DEBUG, __FILE__, __LINE__);
+		
+		// Page-Datei (absolute path)
+		$pageFile = MODERNFRONTEND_PATH . 'admin/' . $page . '.php';
+		
+		// Template-Datei (ABSOLUTE path für assign!)
+		$templateFile = B1GMAIL_DIR . 'plugins/modernfrontend/templates/admin/' . $page . '.tpl';
+		
+		PutLog('ModernFrontend: pageFile=' . $pageFile, PRIO_DEBUG, __FILE__, __LINE__);
+		PutLog('ModernFrontend: templateFile=' . $templateFile, PRIO_DEBUG, __FILE__, __LINE__);
+		
+		// Prüfe ob Page-Datei existiert
+		if(!file_exists($pageFile))
+		{
+			PutLog('ModernFrontend: Page file not found: ' . $pageFile, PRIO_WARNING, __FILE__, __LINE__);
+			$tpl->assign('page', B1GMAIL_DIR . 'plugins/modernfrontend/templates/admin/dashboard.tpl');
+			$tpl->assign('error_message', 'Page not found: ' . htmlspecialchars($page));
+			return true;
+		}
+		
+		// Include page logic
+		include($pageFile);
+		
+		// Prüfe ob Template existiert
+		if(!file_exists($templateFile))
+		{
+			PutLog('ModernFrontend: Template not found: ' . $templateFile, PRIO_WARNING, __FILE__, __LINE__);
+			$tpl->assign('page', B1GMAIL_DIR . 'plugins/modernfrontend/templates/admin/dashboard.tpl');
+			$tpl->assign('error_message', 'Template not found: ' . htmlspecialchars($page));
+			return true;
+		}
+		
+		// Assign template (WICHTIG: assign() nicht display()!)
+		$tpl->assign('page', $templateFile);
+		$tpl->assign('plugin_title', $this->name);
+		
+		PutLog('ModernFrontend: Template assigned: ' . $templateFile, PRIO_DEBUG, __FILE__, __LINE__);
+		
+		return true;
+	}
+	
+	private function _loadSettings()
+	{
+		global $db;
+		
+		$this->settings = array(
+			'enabled' => true,
+			'sitename' => 'aikQ Mail',
+			'tagline' => 'Professional Email Service',
+			'language' => 'de',
+			'analytics_enabled' => true
+		);
+		
+		try {
+			$result = $db->Query('SELECT * FROM {pre}mf_settings');
+			while($row = $result->FetchArray(MYSQLI_ASSOC))
+			{
+				$this->settings[$row['setting_key']] = $row['setting_value'];
+			}
+		} catch(Exception $e) {}
+	}
+	
+	private function _loadTheme()
+	{
+		global $db;
+		
+		$this->theme = array(
+			'primary_color' => '#76B82A',
+			'secondary_color' => '#333333',
+			'font_family' => 'Arial, sans-serif'
+		);
+		
+		try {
+			$result = $db->Query('SELECT * FROM {pre}mf_theme WHERE id=1');
+			if($row = $result->FetchArray(MYSQLI_ASSOC))
+			{
+				$this->theme = array_merge($this->theme, $row);
+			}
+		} catch(Exception $e) {}
+	}
+	
+	private function _createDirectories()
+	{
+		$dirs = array(
+			B1GMAIL_DIR . 'uploads/modernfrontend',
+			B1GMAIL_DIR . 'uploads/modernfrontend/images',
+			B1GMAIL_DIR . 'uploads/modernfrontend/media',
+			B1GMAIL_DIR . 'uploads/modernfrontend/files',
+			B1GMAIL_DIR . 'uploads/modernfrontend/thumbnails'
+		);
+		
+		foreach($dirs as $dir)
+		{
+			if(!is_dir($dir))
+			{
+				@mkdir($dir, 0755, true);
+			}
+		}
+	}
+	
+	public function getSetting($key, $default = null)
+	{
+		return isset($this->settings[$key]) ? $this->settings[$key] : $default;
+	}
+	
+	public function getTheme($key, $default = null)
+	{
+		return isset($this->theme[$key]) ? $this->theme[$key] : $default;
+	}
+}
+
+// Register plugin
+$plugins->registerPlugin('ModernFrontendPlugin');
+?>

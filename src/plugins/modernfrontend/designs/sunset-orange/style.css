@@ -1,0 +1,31 @@
+/* Sunset Orange - Warm sunset colors */
+
+:root {
+  --primary-color: #FF5722;
+  --secondary-color: #E64A19;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.header {
+  background: var(--primary-color);
+  color: white;
+  padding: 20px;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--secondary-color);
+}

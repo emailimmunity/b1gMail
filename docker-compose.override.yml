@@ -1,0 +1,20 @@
+version: '3.8'
+
+# Docker Compose Override
+# Für Entwicklung und Code-Verifikation
+
+services:
+  b1gmail:
+    volumes:
+      # Zusätzlicher Read-Only Mount für Code-Verifikation
+      # Wird von tools/verify-sync.sh benutzt um Host ↔ Container zu vergleichen
+      - ./src:/host-src:ro
+      
+    environment:
+      # Development Mode
+      - B1GMAIL_DEBUG=true
+      - XDEBUG_MODE=develop,debug
+      
+    # Ports für Debugging
+    # ports:
+    #   - "9003:9003"  # XDebug
