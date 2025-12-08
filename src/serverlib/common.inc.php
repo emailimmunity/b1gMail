@@ -1235,7 +1235,7 @@ function SyncDBStruct($databaseStructure)
 					if($myField[1] != $field[1]
 						|| $myField[2] != $field[2]
 						|| ($myField[4] != $field[4] && !(($myField[4]==0 && $field[4]=='') || ($myField[4]=='' && $field[4]==0)))
-						|| $myField[5] != $field[5])
+						|| (isset($field[5]) && $myField[5] != $field[5]))
 					{
 						$op = 'MODIFY';
 					}
@@ -1261,7 +1261,7 @@ function SyncDBStruct($databaseStructure)
 									? ' DEFAULT ' . $field[4]
 									: ' DEFAULT \'' . $db->Escape($field[4]) . '\'')
 							: ''),
-						$field[5] != '' ? ' ' . $field[5] : '');
+						isset($field[5]) && $field[5] != '' ? ' ' . $field[5] : '');
 				}
 			}
 
@@ -1342,7 +1342,7 @@ function SyncDBStruct($databaseStructure)
 								? ' DEFAULT ' . $field[4]
 								: ' DEFAULT \'' . $db->Escape($field[4]) . '\'')
 						: ''),
-					$field[5] != '' ? ' ' . $field[5] : '');
+					isset($field[5]) && $field[5] != '' ? ' ' . $field[5] : '');
 			}
 
 			// indexes

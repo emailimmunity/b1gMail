@@ -51,16 +51,16 @@ class RemoveIPPlugin extends BMPlugin
 			'bm60_mod_removeip_surveillance' => [
 				'fields' => [
 					['id', 'int(11)', 'NO', 'PRI', NULL, 'auto_increment'],
-					['userid', 'int(11)', 'NO', 'MUL', NULL],
-					['email', 'varchar(255)', 'NO', '', ''],
-					['reason', 'varchar(500)', 'NO', '', ''],
-					['authority', 'varchar(255)', 'NO', '', ''],
-					['file_number', 'varchar(100)', 'NO', '', ''],
-					['created_at', 'datetime', 'NO', '', 'CURRENT_TIMESTAMP'],
-					['created_by', 'int(11)', 'NO', '', NULL],
-					['valid_from', 'datetime', 'NO', '', NULL],
-					['valid_until', 'datetime', 'YES', '', NULL],
-					['active', 'tinyint(1)', 'NO', '', '1']
+					['userid', 'int(11)', 'NO', 'MUL', NULL, ''],
+					['email', 'varchar(255)', 'NO', '', '', ''],
+					['reason', 'varchar(500)', 'NO', '', '', ''],
+					['authority', 'varchar(255)', 'NO', '', '', ''],
+					['file_number', 'varchar(100)', 'NO', '', '', ''],
+					['created_at', 'timestamp', 'NO', '', 'CURRENT_TIMESTAMP', ''],
+					['created_by', 'int(11)', 'NO', '', NULL, ''],
+					['valid_from', 'datetime', 'NO', '', NULL, ''],
+					['valid_until', 'datetime', 'YES', '', NULL, ''],
+					['active', 'tinyint(1)', 'NO', '', '1', '']
 				],
 				'indexes' => [
 					'PRIMARY' => ['id'],
@@ -72,14 +72,14 @@ class RemoveIPPlugin extends BMPlugin
 			'bm60_mod_removeip_logs' => [
 				'fields' => [
 					['id', 'int(11)', 'NO', 'PRI', NULL, 'auto_increment'],
-					['surveillance_id', 'int(11)', 'NO', 'MUL', NULL],
-					['userid', 'int(11)', 'NO', '', NULL],
-					['email', 'varchar(255)', 'NO', '', ''],
-					['ip_address', 'varchar(45)', 'NO', '', ''],
-					['action', 'varchar(100)', 'NO', '', ''],
-					['timestamp', 'datetime', 'NO', '', 'CURRENT_TIMESTAMP'],
-					['user_agent', 'text', 'YES', '', NULL],
-					['request_uri', 'text', 'YES', '', NULL]
+					['surveillance_id', 'int(11)', 'NO', 'MUL', NULL, ''],
+					['userid', 'int(11)', 'NO', '', NULL, ''],
+					['email', 'varchar(255)', 'NO', '', '', ''],
+					['ip_address', 'varchar(45)', 'NO', '', '', ''],
+					['action', 'varchar(100)', 'NO', '', '', ''],
+					['timestamp', 'timestamp', 'NO', '', 'CURRENT_TIMESTAMP', ''],
+					['user_agent', 'text', 'YES', '', NULL, ''],
+					['request_uri', 'text', 'YES', '', NULL, '']
 				],
 				'indexes' => [
 					'PRIMARY' => ['id'],
