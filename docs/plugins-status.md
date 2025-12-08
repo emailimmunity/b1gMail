@@ -40,7 +40,8 @@
 | 18 | `premiumaccount.plugin.php` | Premium Accounts | ✅ aktiv | Billing | 118 KB | Premium-Features + Billing |
 | 19 | `product-subscription.plugin.php` | Product Subscriptions | ✅ aktiv | Billing | 4 KB | Abo-Verwaltung für Produkte |
 | 20 | `profilecheck.plugin.php` | Profile Check | ✅ aktiv | Security | 7 KB | Profil-Validierung |
-| 21 | `removeip.plugin.php` | IP Remover (TKÜV) | ✅ aktiv | Privacy/Legal | 11 KB | **Version 2.0.0** - TKÜV-konform, Überwachungs-Management, Quelle: src/src/plugins/removeip.plugin.php, V1 Backup: removeip_v1_backup.plugin.php |
+| 21 | `removeip.plugin.php` | IP Remover (TKÜV) | ✅ aktiv | Privacy/Legal | 11 KB | **Version 2.0.0** - TKÜV-konform, Überwachungs-Management, Quelle: src/src/plugins/removeip.plugin.php |
+| 21b | `removeip_v1_backup.plugin.php` | RemoveIP V1 Backup | 📦 backup | Archive | 1.4 KB | Backup von Version 1.0.1 - NICHT aktiv, nur für Rollback |
 | 22 | `search.plugin.php` | Search | ✅ aktiv | Frontend | 23 KB | Erweiterte Suchfunktion |
 | 23 | `signature.plugin.php` | Signature Manager | ✅ aktiv | Frontend | 10 KB | Email-Signaturen für User |
 | 24 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
@@ -102,7 +103,7 @@ Diese Plugins sind im Repository verfügbar (`external-plugins/`), aber noch **N
 
 ---
 
-## �📊 Status-Definitionen
+## �� Status-Definitionen
 
 ### ✅ **aktiv**
 - Im Verzeichnis `src/plugins/`
@@ -121,6 +122,12 @@ Diese Plugins sind im Repository verfügbar (`external-plugins/`), aber noch **N
 - Noch NICHT in `src/plugins/` aktiv
 - Bewusst zurückgehalten für spätere Aktivierung
 - Im Repository für zukünftige Nutzung
+
+### 📦 **backup**
+- Backup-Kopie einer älteren Version
+- In `src/plugins/` aber NICHT aktiv (wird nicht geladen)
+- Für Rollback-Zwecke archiviert
+- Dateiname enthält "_backup" oder ähnlich
 
 ### ⚠️ **deprecated**
 - Noch vorhanden, aber veraltet
