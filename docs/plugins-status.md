@@ -1,6 +1,6 @@
 # b1gMail Plugins – Status
 
-**Zuletzt aktualisiert:** 2025-12-08 18:50  
+**Zuletzt aktualisiert:** 2025-12-08 19:35  
 **Geprüft von:** Windsurf AI + Karsten  
 **Container:** b1gmail  
 **Branch:** main
@@ -9,10 +9,11 @@
 
 ## 📊 Übersicht
 
-**Aktiv:** 26/27 Plugins (96.3%)  
+**Aktiv:** 27/28 Plugins (96.4%)  
 **Geblockt:** 1 Plugin  
-**Vorbereitet (extern):** 8 Plugins  
-**Status:** ✅ Produktiv einsatzbereit
+**Vorbereitet (extern):** 7 Plugins  
+**Status:** ✅ Produktiv einsatzbereit  
+**External Services:** ✅ Elasticsearch 8.11.0 aktiv
 
 ---
 
@@ -46,8 +47,9 @@
 | 23 | `signature.plugin.php` | Signature Manager | ✅ aktiv | Frontend | 10 KB | Email-Signaturen für User |
 | 24 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
 | 25 | `stalwart-jmap.plugin.php` | Stalwart JMAP | ✅ aktiv | Integration | 12 KB | JMAP-Integration mit Stalwart Server |
-| 26 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
-| 27 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
+| 26 | `universalsearch.plugin.php` | Universal Search | ✅ aktiv | Search | 47 KB | **Elasticsearch 8.11.0** - Globale Suche über Emails, Files, Calendar, Contacts, Notes, Tasks. Requires: elasticsearch/elasticsearch ^8.0 |
+| 27 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
+| 28 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
 
 ---
 
@@ -85,7 +87,6 @@ Diese Plugins sind im Repository verfügbar (`external-plugins/`), aber noch **N
 
 | # | Datei | Name | Quelle | Status | Size | Notizen |
 |---|-------|------|--------|--------|------|---------|
-| 28 | `universalsearch.plugin.php` | Universal Search | `external-plugins/UniversalSearch/` | 🟡 vorbereitet | 47 KB | Globale Suche über alle Module - noch nicht produktiv getestet |
 | 29 | `fulltext.plugin.php` | Better Mail Search | `external-plugins/BetterMailSearch/` | 🟡 vorbereitet | 54 KB | Volltext-Suche in E-Mails - optional, aktuell nicht benötigt |
 | 30 | `tcbrn.plugin.php` | CleverBranding | `external-plugins/CleverBranding/` | 🟡 vorbereitet | 18 KB | Custom Branding für White-Label - Aktivierung geplant |
 | 31 | `tccrn.plugin.php` | CleverCron | `external-plugins/CleverCron/` | 🟡 vorbereitet | 37 KB | Cron-Job-Verwaltung im Admin - Aktivierung geplant |
@@ -138,6 +139,54 @@ Diese Plugins sind im Repository verfügbar (`external-plugins/`), aber noch **N
 - Code gelöscht oder archiviert
 - Nicht mehr im Deployment
 - Nur noch in Git-History
+
+---
+
+## 🌐 External Services
+
+### Elasticsearch 8.11.0
+
+**Status:** ✅ **AKTIV**  
+**Container:** `b1gmail-elasticsearch`  
+**Port:** 9200  
+**Network:** `b1gmail_b1gmail-network`  
+**Version:** 8.11.0  
+**Cluster:** docker-cluster
+
+**Verwendung:**
+- **UniversalSearch Plugin** - Globale Suche über alle Module
+
+**Health Check:**
+```bash
+curl http://localhost:9200
+# Aus Container:
+curl http://b1gmail-elasticsearch:9200
+```
+
+**Management:**
+```bash
+# Container starten:
+docker start b1gmail-elasticsearch
+
+# Container stoppen:
+docker stop b1gmail-elasticsearch
+
+# Logs prüfen:
+docker logs b1gmail-elasticsearch --tail 100
+
+# Neu starten:
+docker restart b1gmail-elasticsearch
+```
+
+**Indices prüfen:**
+```bash
+curl http://localhost:9200/_cat/indices?v
+```
+
+**Data Volume:**
+```
+b1gmail_elasticsearch-data
+```
 
 ---
 
