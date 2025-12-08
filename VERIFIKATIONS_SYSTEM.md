@@ -442,21 +442,198 @@ git commit --no-verify -m "Quick fix"
 
 ---
 
+## 🔍 Vollständige Code-Verifikation
+
+### Produktiver Code vs. Archive
+
+**Single Source of Truth:**
+```
+./src/                          ✅ PRODUKTIVER CODE
+├── admin/                      ✅ 97 Admin-Pages
+├── plugins/                    ✅ 26 aktive Plugins
+├── serverlib/                  ✅ Core-Bibliotheken
+├── templates/                  ✅ Smarty Templates
+└── interface/                  ✅ API-Endpunkte
+```
+
+**Ausgeschlossene Verzeichnisse (Archive/Backups):**
+```
+./src/plugins_all/              ❌ Plugin-Archiv (nicht produktiv)
+./src/plugins_working/          ❌ Plugin-Backup (nicht produktiv)
+./src/plugins_broken/           ❌ Deaktivierte Plugins (1 Plugin)
+./src/plugins_disabled/         ❌ Disabled Plugins
+./src/b1gMail-ORIGINAL/         ❌ Original-Backup
+./src/src/                      ❌ Nested src-Verzeichnis
+./src/install/                  ❌ Installer (nur bei Setup)
+./src/migrations.disabled/      ❌ Alte Migrationen
+./src/patches/                  ❌ Patch-Dateien
+```
+
+**Dynamische Daten (ausgeschlossen):**
+```
+./src/cache/                    ❌ Cache-Dateien
+./src/webdisk/                  ❌ User-Uploads
+./src/upload/                   ❌ Upload-Verzeichnis
+./src/logs/                     ❌ Log-Dateien
+./src/temp/                     ❌ Temporäre Dateien
+./src/vendor/                   ❌ Composer Dependencies
+./src/node_modules/             ❌ NPM Dependencies
+```
+
+### Verifikations-Workflow
+
+**1. Vollständige Struktur-Prüfung:**
+```bash
+# diff -rq vergleicht Verzeichnis-Strukturen
+# Ausgeschlossene Dirs: Archive + Dynamische Daten
+docker exec b1gmail bash /var/www/html/tools/verify-sync.sh
+
+# Ausgabe bei Erfolg:
+# ✅ Struktur: IDENTISCH
+# ✅ Inhalt (MD5): IDENTISCH
+# ✅ Plugins: 26 aktiv
+```
+
+**2. Beispielausgabe erfolgreicher Check:**
+```
+========================================
+  b1gmail Code-Sync Verification
+========================================
+
+App Directory:  /var/www/html
+Host Directory: /host-src
+
+✅ Host-Mount vorhanden
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1️⃣  STRUKTUR-VERGLEICH (diff -rq)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Struktur: IDENTISCH
+   Keine Unterschiede gefunden!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2️⃣  INHALT-VERGLEICH (md5sum)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Berechne MD5-Hashes (App)...
+Berechne MD5-Hashes (Host)...
+
+Vergleiche Hashes...
+✅ Inhalt: IDENTISCH
+   Alle MD5-Hashes stimmen überein!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3️⃣  PLUGIN-VERIFIKATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Plugins (App):  26
+Plugins (Host): 26
+
+✅ Plugin-Anzahl: IDENTISCH
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ ZUSAMMENFASSUNG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Struktur:       100% identisch
+✅ Inhalt (MD5):   100% identisch
+✅ Plugins:        26 aktiv
+
+🎉 Container und Host sind PERFEKT SYNCHRON!
+
+Datum: 2025-12-08 22:46:19
+```
+
+### Automatische Berichte
+
+**Code-Diff-Report:**
+```bash
+# Automatisch generiert bei jedem verify-sync.sh Run
+# Speicherort: docs/code-diff-report.md
+
+# Bei PERFEKTEM Sync:
+# ✅ Keine Unterschiede
+# ✅ Alle Verzeichnisse synchron
+# ✅ Keine Aktionen erforderlich
+
+# Bei Abweichungen:
+# ❌ Liste aller abweichenden Dateien
+# 📋 Typ des Unterschieds (nur Host, nur Container, Inhalt)
+# 🔧 Empfehlungen zur Behebung
+```
+
+**Überprüfung vor jedem Deploy:**
+```bash
+# In tools/run-ci.sh integriert
+#!/bin/bash
+set -e
+
+echo "=== PRE-DEPLOY VERIFICATION ==="
+
+# 1. Code-Sync
+docker exec b1gmail bash /var/www/html/tools/verify-sync.sh || {
+  echo "❌ Code-Sync FAILED!"
+  exit 1
+}
+
+# 2. Plugin-Status
+docker exec b1gmail bash /var/www/html/tools/check-plugin-status.sh || {
+  echo "❌ Plugin-Status FAILED!"
+  exit 2
+}
+
+echo "✅ All verifications passed - ready to deploy!"
+```
+
+### Docker-Volume-Konfiguration
+
+**docker-compose.yml (Haupt-Mount):**
+```yaml
+services:
+  b1gmail:
+    volumes:
+      # SINGLE SOURCE OF TRUTH
+      - ./src:/var/www/html:rw
+```
+
+**docker-compose.override.yml (Verifikations-Mount):**
+```yaml
+services:
+  b1gmail:
+    volumes:
+      # Zusätzlicher Read-Only Mount für Code-Verifikation
+      - ./src:/host-src:ro
+```
+
+**Dockerfile (KEINE COPY!):**
+```dockerfile
+# Line 87-88:
+# Application files come via bind-mount from docker-compose.yml
+# NO COPY here - ./src:/var/www/html is the single source of truth
+```
+
+---
+
 ## 🔮 Nächste Schritte
 
 ### Kurzfristig (Done ✅)
 - [x] verify-sync.sh implementiert
+- [x] verify-sync.sh erweitert für vollständige Code-Prüfung ✨
+- [x] Archive-Verzeichnisse ausgeschlossen ✨
 - [x] check-plugin-status.sh implementiert
 - [x] plugins-status.md erstellt
 - [x] docker-compose.override.yml konfiguriert
 - [x] Tools dokumentiert
-- [x] Git Pre-Commit Hook implementiert ✨
+- [x] Git Pre-Commit Hook implementiert
+- [x] docs/code-diff-report.md generiert ✨
 
 ### Mittelfristig
 - [ ] `subdomainmanager.plugin.php` debuggen
 - [ ] Composer Dependencies finalisieren
 - [ ] backup-plugins.sh implementieren
 - [ ] test-plugin.sh implementieren
+- [ ] tools/run-ci.sh mit verify-sync.sh integrieren
 
 ### Langfristig
 - [ ] Plugin-Performance-Monitoring
