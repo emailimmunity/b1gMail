@@ -1,0 +1,370 @@
+version: '3.8'
+
+services:
+  # b1gMail Webserver & Mail-Server
+  b1gmail:
+    build: .
+    container_name: b1gmail
+    hostname: mail.localhost
+    ports:
+      - "8095:80"         # HTTP → http://localhost:8095
+      - "8445:443"        # HTTPS → https://localhost:8445
+      # - "25:25"           # SMTP - DISABLED (privileged port)
+      # - "465:465"         # SMTPS - DISABLED (privileged port)
+      # - "587:587"         # SMTP Submission - DISABLED (privileged port)
+      # - "110:110"         # POP3 - DISABLED (privileged port)
+      # - "995:995"         # POP3S - DISABLED (privileged port)
+      # - "143:143"         # IMAP - DISABLED (privileged port)
+      # - "993:993"         # IMAPS - DISABLED (privileged port)
+      # - "8080:8080"       # WebDAV - DISABLED due to port conflict
+      - "8443:8443"       # WebDAV/CalDAV/CardDAV (SSL)
+      - "2222:22"         # SFTP (gemappt auf 2222)
+    volumes:
+      # SINGLE SOURCE OF TRUTH: ./src is bind-mounted, no COPY in Dockerfile!
+      - ./src:/var/www/html:rw
+      - ./data/webdisk:/var/www/html/webdisk:rw
+      - ./data/upload:/var/www/html/upload:rw
+      - ./logs:/var/log/b1gmail:rw
+      - ./docker/config:/etc/b1gmail:ro
+      # NO config.inc.php override - use src/serverlib/config.inc.php directly!
+    environment:
+      # Database
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=b1gmail
+      - MYSQL_USER=b1gmail
+      - MYSQL_PASSWORD=b1gmail_password
+      - MYSQL_ROOT_PASSWORD=root_password
+      
+      # Legacy Protocols (Internal)
+      - SMTP_HOST=localhost
+      - IMAP_HOST=localhost
+      - POP3_HOST=localhost
+      
+      # Features
+      - WEBDAV_ENABLED=true
+      - CALDAV_ENABLED=true
+      - CARDDAV_ENABLED=true
+      - JMAP_ENABLED=true
+      - EWS_ENABLED=true
+      - EAS_ENABLED=true
+      - SFTP_ENABLED=true
+      - S3_ENABLED=true
+      
+      # Admin
+      - ADMIN_EMAIL=admin@localhost
+      - ADMIN_PASSWORD=admin123
+      
+      # NEW PROTOCOL BRIDGES
+      # Cyrus IMAP/POP3/JMAP (ECHTES CYRUS!)
+      - CYRUS_HOST=cyrus
+      - CYRUS_ADMIN_USER=cyrus
+      - CYRUS_ADMIN_PASS=cyrus_admin_password
+      - CYRUS_IMAP_PORT=143
+      - CYRUS_POP3_PORT=110
+      - CYRUS_JMAP_URL=http://cyrus:8008
+      
+      # Stalwart JMAP Server (Modern JSON Mail Protocol)
+      - STALWART_JMAP_URL=http://stalwart:8080
+      - STALWART_JMAP_ENABLED=true
+      - STALWART_ADMIN_USER=admin
+      - STALWART_ADMIN_PASS=admin123
+      
+      # Grommunio MAPI/EWS/EAS (External VM!)
+      - GROMMUNIO_API_URL=https://192.168.178.144:8443/api/v1
+      - GROMMUNIO_API_USER=admin
+      - GROMMUNIO_API_PASS=1234
+      - GROMMUNIO_VERIFY_SSL=false
+      - GROMMUNIO_MAPI_URL=https://192.168.178.144
+      - GROMMUNIO_EWS_URL=https://192.168.178.144/EWS/Exchange.asmx
+      - GROMMUNIO_EAS_URL=https://192.168.178.144/Microsoft-Server-ActiveSync
+      
+      # SFTPGo File Server
+      - SFTPGO_API_URL=http://sftpgo:8080
+      - SFTPGO_API_KEY=
+      - SFTPGO_SFTP_HOST=sftpgo
+      - SFTPGO_SFTP_PORT=2022
+      - SFTPGO_FTPS_PORT=2021
+      - SFTPGO_WEBDAV_URL=http://sftpgo:8090
+      - SFTPGO_S3_ENDPOINT=http://minio:9000
+      
+      # Postfix SMTP Gateway
+      - POSTFIX_HOST=postfix
+      - POSTFIX_SMTP_PORT=25
+      - POSTFIX_SUBMISSION_PORT=587
+      - POSTFIX_SMTPS_PORT=465
+      - POSTFIX_QUEUE_DIR=/var/spool/postfix
+    depends_on:
+      - mysql
+      - redis
+      - minio
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # MySQL Datenbank
+  mysql:
+    image: mysql:8.0
+    container_name: b1gmail-mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=b1gmail
+      - MYSQL_USER=b1gmail
+      - MYSQL_PASSWORD=b1gmail_password
+      - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+      - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --max_allowed_packet=256M
+      - --innodb_buffer_pool_size=512M
+      - --event_scheduler=ON
+      - --log_bin_trust_function_creators=1
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (für Caching & Sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: b1gmail-redis
+    # ports:
+    #   - "6379:6379"  # Redis - DISABLED due to port conflict
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (S3-kompatibler Object Storage)
+  minio:
+    image: minio/minio:latest
+    container_name: b1gmail-minio
+    ports:
+      - "9000:9000"       # S3 API
+      - "9001:9001"       # MinIO Console
+    volumes:
+      - minio-data:/data
+    environment:
+      - MINIO_ROOT_USER=b1gmail
+      - MINIO_ROOT_PASSWORD=b1gmail_s3_password
+      - MINIO_DOMAIN=s3.localhost
+    command: server /data --console-address ":9001"
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # phpMyAdmin (für Datenbank-Verwaltung)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: b1gmail-phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=root_password
+      - UPLOAD_LIMIT=256M
+    depends_on:
+      - mysql
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+
+  # Mailhog (für E-Mail Testing)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: b1gmail-mailhog
+    ports:
+      - "1025:1025"       # SMTP
+      - "8025:8025"       # Web UI
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+
+  # Adminer (Alternative zu phpMyAdmin)
+  adminer:
+    image: adminer:latest
+    container_name: b1gmail-adminer
+    ports:
+      - "8082:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=mysql
+    depends_on:
+      - mysql
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+
+  # Dovecot IMAP/POP3 Server (Cyrus-kompatibel, Container heißt cyrus)
+  cyrus:
+    image: dovecot/dovecot:latest
+    container_name: b1gmail-cyrus
+    hostname: cyrus.localhost
+    ports:
+      - "2143:143"        # IMAP
+      - "2993:993"        # IMAPS
+      - "2110:110"        # POP3
+      - "2995:995"        # POP3S
+      - "4190:4190"       # ManageSieve
+    volumes:
+      - cyrus-data:/var/mail
+      - cyrus-config:/etc/dovecot
+    environment:
+      - DOVECOT_SQL_DRIVER=mysql
+      - DOVECOT_SQL_DATABASE=b1gmail
+      - DOVECOT_SQL_HOST=mysql
+      - DOVECOT_SQL_USER=b1gmail
+      - DOVECOT_SQL_PASSWORD=b1gmail_password
+    depends_on:
+      - mysql
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+
+  # SFTPGo File Server (NEW!)
+  sftpgo:
+    image: drakkan/sftpgo:latest
+    container_name: b1gmail-sftpgo
+    ports:
+      - "2022:2022"       # SFTP
+      - "2021:2021"       # FTP/FTPS
+      - "8090:8090"       # WebDAV
+      - "9090:8080"       # Web Admin UI
+    volumes:
+      - sftpgo-config:/var/lib/sftpgo
+    environment:
+      # MySQL Database
+      - SFTPGO_DATA_PROVIDER__DRIVER=mysql
+      - SFTPGO_DATA_PROVIDER__NAME=sftpgo
+      - SFTPGO_DATA_PROVIDER__HOST=mysql
+      - SFTPGO_DATA_PROVIDER__PORT=3306
+      - SFTPGO_DATA_PROVIDER__USERNAME=b1gmail
+      - SFTPGO_DATA_PROVIDER__PASSWORD=b1gmail_password
+      # S3/Minio Backend (PHASE 3 - JETZT AKTIV!)
+      - SFTPGO_FS__PROVIDER=s3
+      - SFTPGO_FS__S3CONFIG__BUCKET=b1gmail-storage
+      - SFTPGO_FS__S3CONFIG__REGION=us-east-1
+      - SFTPGO_FS__S3CONFIG__ACCESS_KEY=minioadmin
+      - SFTPGO_FS__S3CONFIG__ACCESS_SECRET=minioadmin
+      - SFTPGO_FS__S3CONFIG__ENDPOINT=http://minio:9000
+      - SFTPGO_FS__S3CONFIG__FORCE_PATH_STYLE=true
+      - SFTPGO_FS__S3CONFIG__UPLOAD_PART_SIZE=5
+      - SFTPGO_FS__S3CONFIG__UPLOAD_CONCURRENCY=4
+      - SFTPGO_SMTP__TEMPLATES_PATH=
+    depends_on:
+      - mysql
+      - minio
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+
+  # Postfix SMTP Gateway (NEW!)
+  postfix:
+    image: boky/postfix:latest
+    container_name: b1gmail-postfix
+    hostname: mail.localhost
+    ports:
+      - "2025:25"         # SMTP
+      - "2587:587"        # Submission
+    volumes:
+      - postfix-queue:/var/spool/postfix
+      - postfix-config:/etc/postfix
+    environment:
+      - ALLOWED_SENDER_DOMAINS=localhost
+      - RELAYHOST=
+      - ALLOW_EMPTY_SENDER_DOMAINS=true
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+
+  # Stalwart JMAP Server (MODERN JSON MAIL ACCESS PROTOCOL)
+  stalwart:
+    image: stalwartlabs/stalwart:latest
+    container_name: b1gmail-stalwart
+    hostname: jmap.localhost
+    ports:
+      - "8008:8080"       # JMAP API (HTTP)
+      - "8444:8443"       # JMAP API (HTTPS)
+      - "3143:143"        # IMAP (alternative)
+      - "3993:993"        # IMAPS (alternative)
+    volumes:
+      - stalwart-data:/opt/stalwart-mail/data
+      - stalwart-config:/opt/stalwart-mail/etc
+      - ./docker/stalwart:/config:ro
+      - cyrus-data:/var/mail:ro  # Shared mailbox access (read-only)
+    environment:
+      - STALWART_DOMAIN=localhost
+      - STALWART_HOSTNAME=jmap.localhost
+      - STALWART_ADMIN_PASSWORD=admin123
+      # MySQL Integration
+      - STALWART_DB_TYPE=mysql
+      - STALWART_DB_HOST=mysql
+      - STALWART_DB_PORT=3306
+      - STALWART_DB_NAME=b1gmail
+      - STALWART_DB_USER=b1gmail
+      - STALWART_DB_PASSWORD=b1gmail_password
+    depends_on:
+      - mysql
+      - cyrus
+    networks:
+      - b1gmail-network
+    restart: unless-stopped
+
+networks:
+  b1gmail-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+  cyrus-data:
+    driver: local
+  cyrus-config:
+    driver: local
+  sftpgo-data:
+    driver: local
+  sftpgo-config:
+    driver: local
+  postfix-queue:
+    driver: local
+  postfix-config:
+    driver: local
+  stalwart-data:
+    driver: local
+  stalwart-config:
+    driver: local

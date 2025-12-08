@@ -1,0 +1,9 @@
+# Security: Prevent direct access to disabled plugins
+Order deny,allow
+Deny from all
+
+# Allow only from debug scripts
+<FilesMatch "\.php$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
