@@ -1,6 +1,6 @@
 # b1gMail Plugins – Status
 
-**Zuletzt aktualisiert:** 2025-12-08 16:15  
+**Zuletzt aktualisiert:** 2025-12-08 18:50  
 **Geprüft von:** Windsurf AI + Karsten  
 **Container:** b1gmail  
 **Branch:** main
@@ -11,6 +11,7 @@
 
 **Aktiv:** 26/27 Plugins (96.3%)  
 **Geblockt:** 1 Plugin  
+**Vorbereitet (extern):** 8 Plugins  
 **Status:** ✅ Produktiv einsatzbereit
 
 ---
@@ -39,7 +40,7 @@
 | 18 | `premiumaccount.plugin.php` | Premium Accounts | ✅ aktiv | Billing | 118 KB | Premium-Features + Billing |
 | 19 | `product-subscription.plugin.php` | Product Subscriptions | ✅ aktiv | Billing | 4 KB | Abo-Verwaltung für Produkte |
 | 20 | `profilecheck.plugin.php` | Profile Check | ✅ aktiv | Security | 7 KB | Profil-Validierung |
-| 21 | `removeip.plugin.php` | IP Remover | ✅ aktiv | Privacy | 3 KB | Entfernt IPs aus Logs (DSGVO) |
+| 21 | `removeip.plugin.php` | IP Remover (TKÜV) | ✅ aktiv | Privacy/Legal | 11 KB | **Version 2.0.0** - TKÜV-konform, Überwachungs-Management, Quelle: src/src/plugins/removeip.plugin.php, V1 Backup: removeip_v1_backup.plugin.php |
 | 22 | `search.plugin.php` | Search | ✅ aktiv | Frontend | 23 KB | Erweiterte Suchfunktion |
 | 23 | `signature.plugin.php` | Signature Manager | ✅ aktiv | Frontend | 10 KB | Email-Signaturen für User |
 | 24 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
@@ -77,7 +78,31 @@
 
 ---
 
-## 📊 Status-Definitionen
+## � Vorbereitete Externe Plugins
+
+Diese Plugins sind im Repository verfügbar (`external-plugins/`), aber noch **NICHT** in `src/plugins/` aktiv.
+
+| # | Datei | Name | Quelle | Status | Size | Notizen |
+|---|-------|------|--------|--------|------|---------|
+| 28 | `universalsearch.plugin.php` | Universal Search | `external-plugins/UniversalSearch/` | 🟡 vorbereitet | 47 KB | Globale Suche über alle Module - noch nicht produktiv getestet |
+| 29 | `fulltext.plugin.php` | Better Mail Search | `external-plugins/BetterMailSearch/` | 🟡 vorbereitet | 54 KB | Volltext-Suche in E-Mails - optional, aktuell nicht benötigt |
+| 30 | `tcbrn.plugin.php` | CleverBranding | `external-plugins/CleverBranding/` | 🟡 vorbereitet | 18 KB | Custom Branding für White-Label - Aktivierung geplant |
+| 31 | `tccrn.plugin.php` | CleverCron | `external-plugins/CleverCron/` | 🟡 vorbereitet | 37 KB | Cron-Job-Verwaltung im Admin - Aktivierung geplant |
+| 32 | `tccme.plugin.php` | CleverMailEncryption | `external-plugins/CleverMailEncryption/` | 🟡 vorbereitet | 34 KB | S/MIME + PGP Encryption - Aktivierung geplant |
+| 33 | `tcsup.plugin.php` | CleverSupportSystem | `external-plugins/CleverSupportSystem/` | 🟡 vorbereitet | 75 KB | Ticket-System + Knowledge Base - Aktivierung geplant |
+| 34 | `tctz.plugin.php` | CleverTimeZone | `external-plugins/CleverTimeZone/` | 🟡 vorbereitet | 17 KB | Automatische Zeitzone-Erkennung - Aktivierung geplant |
+| 35 | `tcspace.plugin.php` | BetterQuota (tcspace) | `external-plugins/BetterQuota/` | 🟡 vorbereitet | 14 KB | Erweiterte Quota-Visualisierung - betterquota_v2 ist aktiv |
+
+**Aktivierungs-Prozess:**
+1. Plugin von `external-plugins/` nach `src/plugins/` kopieren
+2. Container neu starten: `docker-compose restart b1gmail`
+3. Im Admin-Panel prüfen und aktivieren
+4. Dokumentation updaten (Status → ✅ aktiv)
+5. Git commit mit ausführlicher Beschreibung
+
+---
+
+## �📊 Status-Definitionen
 
 ### ✅ **aktiv**
 - Im Verzeichnis `src/plugins/`
@@ -90,6 +115,12 @@
 - Wird NICHT geladen
 - Verursacht bekannte Fehler
 - Grund dokumentiert
+
+### 🟡 **vorbereitet**
+- In `external-plugins/` verfügbar
+- Noch NICHT in `src/plugins/` aktiv
+- Bewusst zurückgehalten für spätere Aktivierung
+- Im Repository für zukünftige Nutzung
 
 ### ⚠️ **deprecated**
 - Noch vorhanden, aber veraltet
