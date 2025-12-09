@@ -13,6 +13,26 @@ echo ""
 # Exit codes
 EXIT_CODE=0
 
+# Check 0: Composer Dependencies
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "0️⃣  COMPOSER DEPENDENCIES"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+if [ -f /var/www/html/composer.json ]; then
+  echo "Composer dependencies installieren..."
+  if composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader -d /var/www/html 2>&1; then
+    echo "✅ Composer: PASSED"
+  else
+    echo "❌ Composer: FAILED!"
+    EXIT_CODE=7
+  fi
+else
+  echo "⚠️  composer.json nicht gefunden - übersprungen"
+fi
+
+echo ""
+
 # Check 1: Code-Sync Verification
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "1️⃣  CODE-SYNC VERIFICATION"
@@ -135,6 +155,7 @@ else
   echo "  4 = Health-Endpoint nicht erreichbar"
   echo "  5 = Apache2 läuft nicht"
   echo "  6 = MySQL nicht erreichbar"
+  echo "  7 = Composer install fehlgeschlagen"
   echo ""
   echo "⚠️  DEPLOYMENT NICHT EMPFOHLEN!"
   echo ""

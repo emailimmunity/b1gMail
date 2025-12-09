@@ -615,6 +615,82 @@ services:
 
 ---
 
+## 📦 Composer-Integration in CI/CD
+
+### Automatische Dependency-Installation
+
+**In run-ci.sh (Check 0):**
+```bash
+# Composer Dependencies installieren
+composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader -d /var/www/html
+```
+
+**Flags Erklärung:**
+- `--no-dev`: Keine Development-Dependencies (PHPUnit, Debug-Tools, etc.)
+- `--no-interaction`: Keine User-Prompts (CI-kompatibel)
+- `--prefer-dist`: Download von Pre-Built-Archives statt Git-Clones
+- `--optimize-autoloader`: Generiert optimierte Autoloader-Classmap
+
+### Development vs Production
+
+**Development (Host):**
+```bash
+# Im Host (Repo-Root)
+composer install
+
+# Mit Dev-Dependencies:
+# - PHPUnit, PHPStan
+# - Debug-Tools
+# - Code-Sniffer
+```
+
+**Production (Container/Deploy):**
+```bash
+# Im Container (automatisch in run-ci.sh)
+composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+# OHNE Dev-Dependencies
+# Optimierter Autoloader
+# Schnellere Load-Times
+```
+
+### CI/CD Checks
+
+```bash
+docker exec b1gmail bash /var/www/html/tools/run-ci.sh
+
+Checks:
+0️⃣  COMPOSER DEPENDENCIES    ✅ PASSED
+1️⃣  CODE-SYNC VERIFICATION   ✅ PASSED
+2️⃣  PLUGIN STATUS            ✅ PASSED
+3️⃣  PHP SYNTAX CHECK         ✅ PASSED
+4️⃣  CONTAINER HEALTH         ✅ PASSED
+
+Exit Code: 0 = ALL CHECKS PASSED
+```
+
+### Troubleshooting Composer
+
+**Problem: Composer install schlägt fehl**
+```bash
+# Im Container manuell testen
+docker exec b1gmail composer install -vvv
+
+# Cache clearen
+docker exec b1gmail composer clear-cache
+
+# Update auf neueste Versionen
+docker exec b1gmail composer update
+```
+
+**Problem: Memory Limit**
+```bash
+# Memory Limit erhöhen
+docker exec b1gmail php -d memory_limit=2G $(which composer) install --no-dev
+```
+
+---
+
 ## 🔮 Nächste Schritte
 
 ### Kurzfristig (Done ✅)
@@ -629,11 +705,11 @@ services:
 - [x] docs/code-diff-report.md generiert ✨
 
 ### Mittelfristig
+- [x] Composer in run-ci.sh integriert ✨
+- [x] tools/run-ci.sh mit verify-sync.sh integriert ✨
 - [ ] `subdomainmanager.plugin.php` debuggen
-- [ ] Composer Dependencies finalisieren
 - [ ] backup-plugins.sh implementieren
 - [ ] test-plugin.sh implementieren
-- [ ] tools/run-ci.sh mit verify-sync.sh integrieren
 
 ### Langfristig
 - [ ] Plugin-Performance-Monitoring

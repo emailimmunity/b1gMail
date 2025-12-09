@@ -10,11 +10,11 @@
 ## 📊 Übersicht
 
 **Aktiv:** 26/27 Plugins (96.3%)  
-**Backup/Archive:** 1 Plugin (removeip_v1_backup)  
 **Geblockt:** 1 Plugin (subdomainmanager)  
 **Vorbereitet (extern):** 7 Plugins  
 **Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform aktiviert  
-**External Services:** ✅ Elasticsearch 8.11.0 aktiv
+**External Services:** ✅ Elasticsearch 8.11.0 aktiv  
+**Backup:** `removeip_v1_backup.plugin.php.bak` (für Rollback verfügbar)
 
 ---
 
@@ -43,7 +43,6 @@
 | 19 | `product-subscription.plugin.php` | Product Subscriptions | ✅ aktiv | Billing | 4 KB | Abo-Verwaltung für Produkte |
 | 20 | `profilecheck.plugin.php` | Profile Check | ✅ aktiv | Security | 7 KB | Profil-Validierung |
 | 21 | `removeip.plugin.php` | IP Remover (TKÜV) | ✅ aktiv | Privacy/Legal | 11 KB | **Version 2.0.0** - TKÜV-konform, Überwachungs-Management, MySQL 8.x kompatibel, Quelle: src/src/plugins/removeip.plugin.php |
-| 21b | `removeip_v1_backup.plugin.php` | RemoveIP V1 Backup | 📦 backup | Archive | 11 KB | Backup der vorherigen Version - NUR für Rollback, wird NICHT geladen |
 | 22 | `search.plugin.php` | Search | ✅ aktiv | Frontend | 23 KB | Erweiterte Suchfunktion |
 | 23 | `signature.plugin.php` | Signature Manager | ✅ aktiv | Frontend | 10 KB | Email-Signaturen für User |
 | 24 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
