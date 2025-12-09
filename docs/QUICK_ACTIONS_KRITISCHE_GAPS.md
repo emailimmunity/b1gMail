@@ -334,4 +334,50 @@ docker exec b1gmail cp /var/www/html/admin/images/ico_lock.png \
 **Erstellt am:** 2025-12-09  
 **Zeitbudget:** 30 Minuten  
 **Impact:** 🔴 Massiv (2FA + bessere UX)  
-**Status:** ⏳ Ready for Implementation
+**Status:** ✅ **ABGESCHLOSSEN 2025-12-09**
+
+---
+
+## ❌ **BEWUSST NICHT UMGESETZT: SpamAssassin Plugin**
+
+**Datum:** 2025-12-09  
+**Entscheidung:** SpamAssassin Plugin wird **NICHT** aktiviert
+
+### **Begründung**
+
+**Kein Provider-/Hosting-Szenario:**
+- b1gMail wird als **internes System** betrieben, nicht als öffentlicher E-Mail-Provider
+- Es gibt keine Anforderung für Anwendungs-basiertes Spam-Filtering
+- Spam-Filtering wird auf **Infrastruktur-Ebene** gehandhabt (z.B. vor dem MX)
+
+**Ressourcen & Komplexität:**
+- SpamAssassin ist **RAM- und CPU-intensiv**
+- Benötigt **dediziert running Container/Service**
+- Erfordert **Lernphase** (Bayes-Filter)
+- **Wartungsaufwand** für False-Positive-Management
+
+**Alternative Lösungen:**
+- Spam-Filtering via vorgeschalteter Infrastruktur:
+  - Postfix mit Rspamd (moderner, performanter als SpamAssassin)
+  - Cloud-Provider-Features (z.B. AWS SES, CloudFlare Email Routing)
+  - Gateway-/MX-Level-Filtering
+
+**Fokus auf Core-Funktionen:**
+- Priorität liegt auf **Email-Templates**, **Groupware**, **2FA**
+- Provider-Features wie SpamAssassin sind **out of scope**
+- Ressourcen werden für User-facing Features eingesetzt
+
+### **Status**
+
+- ❌ **SpamAssassin Plugin:** BEWUSST NICHT AKTIVIERT
+- 📋 **Dokumentiert in:** `docs/PLUGIN_INTEGRATION_PLAN.md`
+- 🎯 **Alternative:** Infrastruktur-Level Spam-Filtering
+- ✅ **Entscheidung final:** Ja (Stand 2025-12-09)
+
+### **Falls zukünftig doch benötigt**
+
+1. **Infrastruktur-Entscheidung treffen:** Provider-Betrieb? Ja/Nein
+2. **Ressourcen-Planung:** RAM/CPU für SpamAssassin-Container
+3. **Alternative evaluieren:** Rspamd statt SpamAssassin (moderner, schneller)
+4. **Plugin aus b1gmail kopieren:** Siehe `PLUGIN_INTEGRATION_PLAN.md`
+5. **Docker-Service hinzufügen:** `docker-compose.yml` erweitern

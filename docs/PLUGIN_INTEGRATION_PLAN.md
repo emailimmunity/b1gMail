@@ -112,7 +112,7 @@ docker exec b1gmail bash /var/www/html/tools/run-ci.sh
 
 ---
 
-### 2. `spamassassin.plugin.php` 🔴 **PRIORITÄT: HOCH**
+### 2. `spamassassin.plugin.php` ❌ **PRIORITÄT: NICHT GEPLANT**
 
 #### **Funktionsbeschreibung**
 Integration von SpamAssassin für serverseitiges Spam-Filtering:
@@ -121,6 +121,9 @@ Integration von SpamAssassin für serverseitiges Spam-Filtering:
 - Spam-Ordner-Routing
 - Lernfähigkeit (Bayes-Filter)
 - Whitelist/Blacklist-Integration
+
+#### **⚠️ BEWUSSTE ENTSCHEIDUNG: NICHT AKTIVIEREN**
+**Grund:** Kein aktuelles Provider-/Hosting-Szenario. b1gMail wird als internes System betrieben, nicht als öffentlicher E-Mail-Provider. Spam-Filtering wird auf Infrastruktur-Ebene (z.B. vor dem MX) gehandhabt, nicht in der Anwendung selbst.
 
 #### **Technische Abhängigkeiten**
 ```yaml
@@ -169,50 +172,37 @@ CREATE TABLE {pre}spamassassin_log (
 - Integration testen (Spam-Erkennung): 1 Stunde
 - **Gesamt: ~3 Stunden**
 
-#### **Empfohlene Priorität: 🔴 HOCH (für Provider-Szenario)**
+#### **Empfohlene Priorität: ❌ NICHT GEPLANT**
 **Grund:**
-- **Provider-Essentiell:** Hosting/E-Mail-Provider MÜSSEN Spam-Filtering anbieten
-- Security: Schützt Benutzer vor Phishing/Malware
-- Compliance: In manchen Regionen gesetzlich vorgeschrieben
-- Reputation: Ohne Spam-Filter ist der Service nicht wettbewerbsfähig
+- **Kein Provider-Szenario:** b1gMail wird NICHT als öffentlicher E-Mail-Provider betrieben
+- **Infrastruktur-Level:** Spam-Filtering erfolgt auf MX-/Gateway-Ebene (vor der Anwendung)
+- **Ressourcen-intensiv:** SpamAssassin benötigt dedizierte Ressourcen (RAM, CPU)
+- **Wartungsaufwand:** Lernphase, False-Positive-Management, Updates
 
-**Aber:** Nur relevant, wenn b1gMail als Provider/Hosting-Lösung eingesetzt wird.
+**Alternative:**
+- Spam-Filtering via vorgeschalteter Infrastruktur (z.B. Postfix/Rspamd, Cloud-Provider)
+- Fokus auf Core-Funktionen statt Provider-Features
 
 #### **Konkrete To-Dos**
 ```bash
-# 1. Plugin analysieren
-cat "c:/Users/KarstenSteffens/Desktop/b1gmail/src/plugins/spamassassin.plugin.php" | head -200
+# ❌ NICHT DURCHFÜHREN - SpamAssassin bewusst NICHT aktiviert
 
-# 2. docker-compose.yml erweitern
-# Füge SpamAssassin-Service hinzu (siehe oben)
+# Begründung:
+# - Kein Provider-Szenario
+# - Spam-Filtering auf Infrastruktur-Ebene
+# - Fokus auf Core-Funktionen
 
-# 3. Plugin kopieren
-cp "c:/Users/KarstenSteffens/Desktop/b1gmail/src/plugins/spamassassin.plugin.php" \
-   "c:/Users/KarstenSteffens/Desktop/b1g/b1gMail/src/plugins/"
-
-# 4. SpamAssassin starten
-docker-compose up -d spamassassin
-
-# 5. Konnektivität testen
-docker exec b1gmail telnet spamassassin 783
-
-# 6. Install-Script ausführen
-docker exec b1gmail php /var/www/html/install-spamassassin.php
-
-# 7. Spam-Test
-# - Test-Spam-Mail verschicken (GTUBE-Test)
-# - Spam-Score prüfen
-# - Spam-Ordner-Routing testen
+# Falls zukünftig doch benötigt:
+# 1. Infrastruktur-Entscheidung klären
+# 2. Ressourcen-Planung (RAM/CPU für SpamAssassin-Container)
+# 3. Alternative Rspamd evaluieren (moderner, performanter)
+# 4. Plugin aus b1gmail kopieren
+# 5. Docker-Service hinzufügen
 ```
 
-**Risiken:**
-- ⚠️⚠️ **HOHE RESSOURCEN:** SpamAssassin ist RAM- und CPU-intensiv
-- ⚠️ False Positives möglich → Whitelist/Blacklist-Management erforderlich
-- ⚠️ Lernphase erforderlich (Bayes-Filter)
-- ⚠️ Netzwerk-Timeout-Handling im Plugin nötig
-
-**Alternative:**
-- Rspamd als modernere, performantere Alternative zu SpamAssassin
+**Status: ❌ BEWUSST NICHT AKTIVIERT**
+**Dokumentiert in:** `docs/QUICK_ACTIONS_KRITISCHE_GAPS.md`
+**Begründung:** Fokus auf Core-Funktionen, kein Provider-Betrieb
 
 ---
 
@@ -452,14 +442,11 @@ Vorerst NICHT aktivieren. Nur auf explizite Anforderung.
 
 ```mermaid
 graph TD
-    A[✅ TwoFactor aktiviert] --> B[1. EmailTemplates aktivieren]
-    B --> C{Provider-Szenario?}
-    C -->|Ja| D[2. SpamAssassin aktivieren]
-    C -->|Nein| E[2. Überspringen]
-    D --> F[3. Groupware aktivieren]
-    E --> F
-    F --> G[4. Translation Pro optional]
-    F --> H[5. Groupware Enterprise optional]
+    A[✅ TwoFactor aktiviert] --> B[✅ 1. EmailTemplates aktiviert]
+    B --> C[❌ SpamAssassin ÜBERSPRUNGEN]
+    C --> D[2. Groupware evaluieren]
+    D --> E[3. Translation Pro optional]
+    D --> F[4. Groupware Enterprise optional]
 ```
 
 ### **Priorisierte Roadmap**
@@ -468,9 +455,9 @@ graph TD
 - ✅ TwoFactor Plugin - **ABGESCHLOSSEN 2025-12-09**
 - ✅ Welcome-Tabs (2FA & Logs) - **ABGESCHLOSSEN 2025-12-09**
 
-#### **PHASE 2: PROFESSIONALITÄT (1-2 Wochen)**
-- 🔴 EmailTemplates Plugin - **START: Nach diesem Commit**
-- 🔴 SpamAssassin Plugin - **START: Falls Provider-Szenario**
+#### **PHASE 2: PROFESSIONALITÄT (1-2 Wochen)** ✅
+- ✅ EmailTemplates Plugin - **ABGESCHLOSSEN 2025-12-09**
+- ❌ SpamAssassin Plugin - **BEWUSST NICHT GEPLANT** (kein Provider-Szenario)
 
 #### **PHASE 3: ERWEITERTE FEATURES (1-2 Monate)**
 - 🟡 Groupware Plugin - **START: Nach Bedarf**
