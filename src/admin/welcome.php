@@ -43,6 +43,18 @@ $tabs = array(
 		'relIcon'	=> 'ico_b1gmail.png',
 		'link'		=> 'welcome.php?action=about&',
 		'active'	=> $_REQUEST['action'] == 'about'
+	),
+	3 => array(
+		'title'		=> '2FA & Security',
+		'relIcon'	=> 'shield.png',
+		'link'		=> 'security-management.php?',
+		'active'	=> false
+	),
+	4 => array(
+		'title'		=> 'Logs & Protokolle',
+		'relIcon'	=> 'logs32.png',
+		'link'		=> 'logs.php?',
+		'active'	=> false
 	)
 );
 
