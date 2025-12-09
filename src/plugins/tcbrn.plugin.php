@@ -53,7 +53,7 @@ class TCBrandPlugin extends BMPlugin {
       SyncDBStruct($structure);
 
       $res = $db->Query('SELECT COUNT(*) FROM {pre}tcbrn_plugin_domains');
-      list ($rowCount) = $res->FetchArray(MYSQL_NUM);
+      list ($rowCount) = $res->FetchArray(MYSQLI_NUM);
       $res->Free();
       if ($rowCount == 0) {
         $domains = $bm_prefs['domains'];
