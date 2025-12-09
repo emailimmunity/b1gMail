@@ -1,18 +1,18 @@
 # b1gMail Plugins – Status
 
-**Zuletzt aktualisiert:** 2025-12-09 15:35  
+**Zuletzt aktualisiert:** 2025-12-09 17:10  
 **Geprüft von:** Windsurf AI + Karsten  
 **Container:** b1gmail  
-**Branch:** feature/activate-twofactor-2fa
+**Branch:** feature/activate-emailtemplates
 
 ---
 
 ## 📊 Übersicht
 
-**Aktiv:** 32/33 Plugins (97.0%)  
+**Aktiv:** 33/34 Plugins (97.1%)  
 **Geblockt:** 1 Plugin (subdomainmanager)  
-**Vorbereitet (extern):** 1 Plugin  
-**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform + ALL CLEVER PLUGINS + TwoFactor 2FA aktiviert 🔥  
+**Vorbereitet (extern):** 0 Plugins  
+**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform + ALL CLEVER PLUGINS + TwoFactor 2FA + EmailTemplates aktiviert 🔥  
 **Hinweis:** universalsearch.plugin.php wurde aus der Dokumentation entfernt (Datei existiert nicht)  
 **External Services:** ✅ Elasticsearch 8.11.0 aktiv  
 **Backup:** `removeip_v1_backup.plugin.php.bak` (für Rollback verfügbar)
@@ -30,32 +30,33 @@
 | 5 | `emailadmin.plugin.php` | Email Admin | ✅ aktiv | Admin | 32 KB | Email-Account-Verwaltung für Admins |
 | 6 | `emailadmin_simple.plugin.php` | Email Admin Simple | ✅ aktiv | Admin | 3 KB | Vereinfachte Email-Admin-UI |
 | 7 | `emailadmin_test.plugin.php` | Email Admin Test | ✅ aktiv | Dev/Test | 1 KB | Test-Implementierung für Email-Admin |
-| 8 | `fax.plugin.php` | Fax Service | ✅ aktiv | Addon | 120 KB | Fax-to-Email und Email-to-Fax |
-| 9 | `logfailedlogins.plugin.php` | Failed Login Logger | ✅ aktiv | Security | 2 KB | Protokolliert fehlgeschlagene Logins |
-| 10 | `logouthinweis.plugin.php` | Logout Notice | ✅ aktiv | Frontend | 5 KB | Logout-Benachrichtigung für User |
-| 11 | `modernfrontend.plugin.php` | Modern Frontend CMS | ✅ aktiv | Frontend | 7 KB | Modernes UI + CMS (11 Admin-Pages, 12 Templates) |
-| 12 | `moduserexport.plugin.php` | User Export | ✅ aktiv | Admin | 4 KB | Export von User-Daten |
-| 13 | `news.plugin.php` | News System | ✅ aktiv | Frontend | 13 KB | News/Announcements für User |
-| 14 | `passwordmanager.plugin.php` | Password Manager | ✅ aktiv | Security | 6 KB | Passwort-Verwaltung für User |
-| 15 | `pluginupdates.plugin.php` | Plugin Updates | ✅ aktiv | Admin | 7 KB | Update-Mechanismus für Plugins |
-| 16 | `plzeditor.plugin.php` | PLZ Editor | ✅ aktiv | Addon | 9 KB | Postleitzahlen-Editor |
-| 17 | `pop3acc.plugin.php` | POP3 Accounts | ✅ aktiv | Core | 10 KB | POP3-Account-Verwaltung |
-| 18 | `premiumaccount.plugin.php` | Premium Accounts | ✅ aktiv | Billing | 118 KB | Premium-Features + Billing |
-| 19 | `product-subscription.plugin.php` | Product Subscriptions | ✅ aktiv | Billing | 4 KB | Abo-Verwaltung für Produkte |
-| 20 | `profilecheck.plugin.php` | Profile Check | ✅ aktiv | Security | 7 KB | Profil-Validierung |
-| 21 | `removeip.plugin.php` | IP Remover (TKÜV) | ✅ aktiv | Privacy/Legal | 11 KB | **Version 2.0.0** - TKÜV-konform, Überwachungs-Management, MySQL 8.x kompatibel, Quelle: src/src/plugins/removeip.plugin.php |
-| 22 | `search.plugin.php` | Search | ✅ aktiv | Frontend | 23 KB | Erweiterte Suchfunktion |
-| 23 | `signature.plugin.php` | Signature Manager | ✅ aktiv | Frontend | 10 KB | Email-Signaturen für User |
-| 24 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
-| 25 | `stalwart-jmap.plugin.php` | Stalwart JMAP | ✅ aktiv | Integration | 12 KB | JMAP-Integration mit Stalwart Server |
-| 26 | `tcbrn.plugin.php` | CleverBranding | ✅ aktiv | Branding | 14 KB | **Version 1.3.1** - White-Label, Custom Logos, Color Schemes, Domain-specific Branding, Quelle: external-plugins/CleverBranding/ |
-| 27 | `tccme.plugin.php` | CleverMailEncryption | ✅ aktiv | Security | 35 KB | **Version 1.4.0** - S/MIME & PGP Encryption, Certificate Management, End-to-End Encryption, Quelle: external-plugins/CleverMailEncryption/ |
-| 28 | `tccrn.plugin.php` | CleverCron | ✅ aktiv | Automation | 37 KB | **Version 1.3.0** - Cron-Job-Verwaltung im Admin, Scheduled Tasks, Job-Status-Monitoring, Quelle: external-plugins/CleverCron/ |
-| 29 | `tcsup.plugin.php` | CleverSupportSystem | ✅ aktiv | Support | 77 KB | **Version 1.5.0** - Ticket-System, Knowledge Base, Live Chat, Support-Workflows, Admin-Dashboard, Quelle: external-plugins/CleverSupportSystem/ |
-| 30 | `tctz.plugin.php` | CleverTimeZone | ✅ aktiv | Automation | 17 KB | **Version 1.2.0** - Automatische Zeitzone-Erkennung, User-spezifische Zeitzonen, Zeitstempel-Konvertierung, Quelle: external-plugins/CleverTimeZone/ |
-| 31 | `twofactor.plugin.php` | Two-Factor Authentication (2FA) | ✅ aktiv | Security | 19 KB | **Version 2.0.0** - TOTP-based 2FA, Google Authenticator, Backup Codes, PHP 8.x, 🔴 KRITISCHES SECURITY FEATURE, Quelle: b1gmail/src/plugins/ |
-| 32 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
-| 33 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
+| 8 | `emailtemplates.plugin.php` | Email Templates | ✅ aktiv | System/UX | 5 KB | **Version 2.0.0** - User Email Templates, Placeholder-System, Kategorien, Usage Tracking, PHP 8.x, Quelle: b1gmail/src/plugins/ |
+| 9 | `fax.plugin.php` | Fax Service | ✅ aktiv | Addon | 120 KB | Fax-to-Email und Email-to-Fax |
+| 10 | `logfailedlogins.plugin.php` | Failed Login Logger | ✅ aktiv | Security | 2 KB | Protokolliert fehlgeschlagene Logins |
+| 11 | `logouthinweis.plugin.php` | Logout Notice | ✅ aktiv | Frontend | 5 KB | Logout-Benachrichtigung für User |
+| 12 | `modernfrontend.plugin.php` | Modern Frontend CMS | ✅ aktiv | Frontend | 7 KB | Modernes UI + CMS (11 Admin-Pages, 12 Templates) |
+| 13 | `moduserexport.plugin.php` | User Export | ✅ aktiv | Admin | 4 KB | Export von User-Daten |
+| 14 | `news.plugin.php` | News System | ✅ aktiv | Frontend | 13 KB | News/Announcements für User |
+| 15 | `passwordmanager.plugin.php` | Password Manager | ✅ aktiv | Security | 6 KB | Passwort-Verwaltung für User |
+| 16 | `pluginupdates.plugin.php` | Plugin Updates | ✅ aktiv | Admin | 7 KB | Update-Mechanismus für Plugins |
+| 17 | `plzeditor.plugin.php` | PLZ Editor | ✅ aktiv | Addon | 9 KB | Postleitzahlen-Editor |
+| 18 | `pop3acc.plugin.php` | POP3 Accounts | ✅ aktiv | Core | 10 KB | POP3-Account-Verwaltung |
+| 19 | `premiumaccount.plugin.php` | Premium Accounts | ✅ aktiv | Billing | 118 KB | Premium-Features + Billing |
+| 20 | `product-subscription.plugin.php` | Product Subscriptions | ✅ aktiv | Billing | 4 KB | Abo-Verwaltung für Produkte |
+| 21 | `profilecheck.plugin.php` | Profile Check | ✅ aktiv | Security | 7 KB | Profil-Validierung |
+| 22 | `removeip.plugin.php` | IP Remover (TKÜV) | ✅ aktiv | Privacy/Legal | 11 KB | **Version 2.0.0** - TKÜV-konform, Überwachungs-Management, MySQL 8.x kompatibel, Quelle: src/src/plugins/removeip.plugin.php |
+| 23 | `search.plugin.php` | Search | ✅ aktiv | Frontend | 23 KB | Erweiterte Suchfunktion |
+| 24 | `signature.plugin.php` | Signature Manager | ✅ aktiv | Frontend | 10 KB | Email-Signaturen für User |
+| 25 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
+| 26 | `stalwart-jmap.plugin.php` | Stalwart JMAP | ✅ aktiv | Integration | 12 KB | JMAP-Integration mit Stalwart Server |
+| 27 | `tcbrn.plugin.php` | CleverBranding | ✅ aktiv | Branding | 14 KB | **Version 1.3.1** - White-Label, Custom-Logos, Color Schemes, Domain-specific Branding, Quelle: external-plugins/CleverBranding/ |
+| 28 | `tccme.plugin.php` | CleverMailEncryption | ✅ aktiv | Security | 35 KB | **Version 1.4.0** - S/MIME & PGP Encryption, Certificate Management, End-to-End Encryption, Quelle: external-plugins/CleverMailEncryption/ |
+| 29 | `tccrn.plugin.php` | CleverCron | ✅ aktiv | Automation | 37 KB | **Version 1.3.0** - Cron-Job-Verwaltung im Admin, Scheduled Tasks, Job-Status-Monitoring, Quelle: external-plugins/CleverCron/ |
+| 30 | `tcsup.plugin.php` | CleverSupportSystem | ✅ aktiv | Support | 77 KB | **Version 1.5.0** - Ticket-System, Knowledge Base, Live Chat, Support-Workflows, Admin-Dashboard, Quelle: external-plugins/CleverSupportSystem/ |
+| 31 | `tctz.plugin.php` | CleverTimeZone | ✅ aktiv | Automation | 17 KB | **Version 1.2.0** - Automatische Zeitzone-Erkennung, User-spezifische Zeitzonen, Zeitstempel-Konvertierung, Quelle: external-plugins/CleverTimeZone/ |
+| 32 | `twofactor.plugin.php` | Two-Factor Authentication (2FA) | ✅ aktiv | Security | 19 KB | **Version 2.0.0** - TOTP-based 2FA, Google Authenticator, Backup Codes, PHP 8.x, 🔴 KRITISCHES SECURITY FEATURE, Quelle: b1gmail/src/plugins/ |
+| 33 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
+| 34 | `subdomainmanager.plugin.php` | Subdomain Manager | ✅ aktiv | Domains | 40 KB | Subdomain-Verwaltung |
 
 ---
 
