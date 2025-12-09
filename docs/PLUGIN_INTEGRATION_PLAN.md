@@ -206,7 +206,10 @@ CREATE TABLE {pre}spamassassin_log (
 
 ---
 
-### 3. `groupware.plugin.php` 🟡 **PRIORITÄT: MITTEL**
+### 3. `groupware.plugin.php` 🟢 **PRIORITÄT: NIEDRIG (CONDITIONAL)**
+
+**Status:** Nicht aktiviert, keine kurzfristige Aktivierung geplant  
+**Aktivierung:** Nur bei konkreter Business-Anforderung  
 
 #### **Funktionsbeschreibung**
 Grundlegende Groupware-Funktionen:
@@ -270,21 +273,6 @@ CREATE TABLE {pre}tasks (
 - Plugin-Datei kopieren: 10 min
 - DB-Schema analysieren und übernehmen: 1 Stunde
 - Frontend-Assets prüfen (JS/CSS): 30 min
-- CalDAV/CardDAV-Integration (falls vorhanden): 2 Stunden
-- iCal-Import/Export testen: 1 Stunde
-- Freigabe-Funktionen testen: 1 Stunde
-- **Gesamt: ~6 Stunden**
-
-#### **Empfohlene Priorität: 🟡 MITTEL**
-**Grund:**
-- **Komfort-Feature:** Für ein E-Mail-System nicht zwingend erforderlich
-- **Wettbewerbsvorteil:** Moderne E-Mail-Anbieter bieten Groupware (z.B. Gmail, Outlook)
-- **Produktivität:** Erhöht Nutzerbindung, wenn gut implementiert
-- **ABER:** Hoher Aufwand, muss gut gepflegt werden
-
-#### **Konkrete To-Dos**
-```bash
-# 1. Plugin analysieren
 wc -l "c:/Users/KarstenSteffens/Desktop/b1gmail/src/plugins/groupware.plugin.php"
 # Erwartung: >1000 Zeilen = sehr komplex
 
@@ -374,7 +362,11 @@ Erst nach allen anderen Plugins aktivieren, falls internationaler Launch geplant
 
 ---
 
-### 5. `groupware_enterprise.plugin.php` 🟢 **PRIORITÄT: NIEDRIG**
+### 5. `groupware_enterprise.plugin.php` 🟢 **PRIORITÄT: NIEDRIG (CONDITIONAL)**
+
+**Status:** Nicht aktiviert, keine kurzfristige Aktivierung geplant  
+**Aktivierung:** Nur für explizite Enterprise-/Großkunden-Szenarien  
+**Abhängig von:** `groupware.plugin.php` muss erst aktiviert sein  
 
 #### **Funktionsbeschreibung**
 Enterprise-Features für Groupware:
@@ -413,11 +405,18 @@ CREATE TABLE {pre}groupware_bookings (
 - Enterprise-Features komplex
 - **Gesamt: ~4 Stunden**
 
-#### **Empfohlene Priorität: 🟢 NIEDRIG**
+#### **Empfohlene Priorität: 🟢 NIEDRIG (CONDITIONAL)**
 **Grund:**
 - **Enterprise-Only:** Nur für große Organisationen relevant
-- **Abhängigkeit:** Groupware-Basis muss erst laufen
-- **Nische:** Kleiner Nutzerkreis
+- **Abhängigkeit:** Groupware-Basis muss erst aktiviert und stabil sein
+- **Nische:** Sehr kleiner Nutzerkreis
+- **Kein Business-Case:** Aktuell keine Enterprise-Kunden mit diesen Anforderungen
+
+**Aktivierungs-Kriterien:**
+1. **Groupware-Basis läuft stabil** (groupware.plugin.php aktiviert)
+2. **Enterprise-Kunde** mit expliziter Anforderung
+3. **Support-Kapazität** für Enterprise-Features vorhanden
+4. **Business-Case klar** (ROI, Nutzen dokumentiert)
 
 #### **Konkrete To-Dos**
 ```bash
@@ -487,6 +486,73 @@ graph TD
 - Aktuelles `search.plugin.php` ist ausreichend
 - Elasticsearch-Integration bereits vorhanden
 - KEINE weiteren Search-Plugins erforderlich
+
+---
+
+## 🎯 **GROUPWARE-FEATURES: ENTSCHEIDUNGS-ZUSAMMENFASSUNG**
+
+### **Status: NICHT Teil des geplanten Basis-Produkts**
+
+**Groupware-Plugins werden NICHT kurzfristig aktiviert.**  
+Aktivierung erfolgt nur bei klarem Business-Case.
+
+### **Begründung:**
+
+#### **1. Kein aktueller Use-Case**
+- b1gMail wird als **internes Email-System** betrieben
+- Nicht als Team-Collaboration-Plattform konzipiert
+- Keine Anforderung für integrierte Kalender/Kontakte-Verwaltung
+
+#### **2. Externe Alternativen verfügbar**
+- **Google Workspace** - Kalender, Kontakte, Drive
+- **Microsoft 365** - Outlook, Teams, SharePoint
+- **Nextcloud** - Self-Hosted Collaboration Suite
+- **Thunderbird + Plugins** - Desktop-Client mit CalDAV/CardDAV
+
+#### **3. Wartungsaufwand**
+- Groupware-Features benötigen kontinuierliche Wartung
+- Bug-Fixes, Feature-Requests, User-Support
+- CalDAV/CardDAV-Sync kann komplex sein
+- UI muss modern bleiben (hoher Erwartungshorizont)
+
+#### **4. Ressourcen-Planung**
+- `groupware.plugin.php`: ~6h Aktivierungsaufwand + laufende Wartung
+- `groupware_enterprise.plugin.php`: +4h + abhängig von Basis-Plugin
+- Keine dedicated Groupware-Kapazität im Team
+
+### **Aktivierungs-Kriterien (Checklist):**
+
+Groupware wird nur aktiviert, wenn **ALLE** folgenden Punkte erfüllt sind:
+
+- [ ] **Explizite Business-Anforderung** von Stakeholdern dokumentiert
+- [ ] **Klarer Use-Case** (z.B. Team-Kalender für interne Meetings, Ressourcen-Buchung)
+- [ ] **Alternative Lösungen evaluiert** (Nextcloud, etc.) und verworfen
+- [ ] **Ressourcen verfügbar** (Dev-Time + Support-Kapazität)
+- [ ] **Support-Prozess definiert** (User-Anfragen, Bug-Reports)
+- [ ] **CalDAV/CardDAV-Sync** als Anforderung bestätigt oder verworfen
+- [ ] **UI/UX-Erwartungen** geklärt und machbar
+
+### **Empfohlene Alternative:**
+
+**Nextcloud für Collaboration:**
+- Self-Hosted, Open Source
+- Kalender, Kontakte, Tasks, Files, Chat
+- Ausgereifte CalDAV/CardDAV-Integration
+- Mobile Apps (iOS, Android)
+- Desktop-Sync-Client
+- Kann mit b1gMail co-existieren (separate Domain/Subdomain)
+
+### **Fazit:**
+
+```
+❌ Groupware: NICHT im aktuellen Scope
+❌ Groupware Enterprise: NICHT im aktuellen Scope
+✅ Fokus: Core-Email-Features (Templates, 2FA, Branding, Support-System)
+🟡 Optional: Bei expliziter Business-Anforderung erneut evaluieren
+```
+
+**Dokumentiert am:** 2025-12-09  
+**Nächste Review:** Bei Änderung der Business-Anforderungen
 
 ---
 
