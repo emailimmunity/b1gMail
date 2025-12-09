@@ -1,18 +1,18 @@
 # b1gMail Plugins – Status
 
-**Zuletzt aktualisiert:** 2025-12-09 15:28  
+**Zuletzt aktualisiert:** 2025-12-09 15:35  
 **Geprüft von:** Windsurf AI + Karsten  
 **Container:** b1gmail  
-**Branch:** feature/activate-clever-supportsystem
+**Branch:** feature/activate-twofactor-2fa
 
 ---
 
 ## 📊 Übersicht
 
-**Aktiv:** 31/32 Plugins (96.9%)  
+**Aktiv:** 32/33 Plugins (97.0%)  
 **Geblockt:** 1 Plugin (subdomainmanager)  
-**Vorbereitet (extern):** 2 Plugins  
-**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform + CleverBranding + CleverCron + CleverTimeZone + CleverMailEncryption + CleverSupportSystem aktiviert  
+**Vorbereitet (extern):** 1 Plugin  
+**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform + ALL CLEVER PLUGINS + TwoFactor 2FA aktiviert 🔥  
 **Hinweis:** universalsearch.plugin.php wurde aus der Dokumentation entfernt (Datei existiert nicht)  
 **External Services:** ✅ Elasticsearch 8.11.0 aktiv  
 **Backup:** `removeip_v1_backup.plugin.php.bak` (für Rollback verfügbar)
@@ -53,8 +53,9 @@
 | 28 | `tccrn.plugin.php` | CleverCron | ✅ aktiv | Automation | 37 KB | **Version 1.3.0** - Cron-Job-Verwaltung im Admin, Scheduled Tasks, Job-Status-Monitoring, Quelle: external-plugins/CleverCron/ |
 | 29 | `tcsup.plugin.php` | CleverSupportSystem | ✅ aktiv | Support | 77 KB | **Version 1.5.0** - Ticket-System, Knowledge Base, Live Chat, Support-Workflows, Admin-Dashboard, Quelle: external-plugins/CleverSupportSystem/ |
 | 30 | `tctz.plugin.php` | CleverTimeZone | ✅ aktiv | Automation | 17 KB | **Version 1.2.0** - Automatische Zeitzone-Erkennung, User-spezifische Zeitzonen, Zeitstempel-Konvertierung, Quelle: external-plugins/CleverTimeZone/ |
-| 31 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
-| 32 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
+| 31 | `twofactor.plugin.php` | Two-Factor Authentication (2FA) | ✅ aktiv | Security | 19 KB | **Version 2.0.0** - TOTP-based 2FA, Google Authenticator, Backup Codes, PHP 8.x, 🔴 KRITISCHES SECURITY FEATURE, Quelle: b1gmail/src/plugins/ |
+| 32 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
+| 33 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
 
 ---
 
