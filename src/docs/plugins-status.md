@@ -50,45 +50,43 @@
 | 25 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
 | 26 | `stalwart-jmap.plugin.php` | Stalwart JMAP | ✅ aktiv | Integration | 12 KB | JMAP-Integration mit Stalwart Server |
 | 27 | `tcbrn.plugin.php` | CleverBranding | ✅ aktiv | Branding | 14 KB | **Version 1.3.1** - White-Label, Custom-Logos, Color Schemes, Domain-specific Branding, Quelle: external-plugins/CleverBranding/ |
-| 28 | `tccme.plugin.php` | CleverMailEncryption | ✅ aktiv | Security | 35 KB | **Version 1.4.0** - S/MIME & PGP Encryption, Certificate Management, End-to-End Encryption, Quelle: external-plugins/CleverMailEncryption/ |
-| 29 | `tccrn.plugin.php` | CleverCron | ✅ aktiv | Automation | 37 KB | **Version 1.3.0** - Cron-Job-Verwaltung im Admin, Scheduled Tasks, Job-Status-Monitoring, Quelle: external-plugins/CleverCron/ |
-| 30 | `tcsup.plugin.php` | CleverSupportSystem | ✅ aktiv | Support | 77 KB | **Version 1.5.0** - Ticket-System, Knowledge Base, Live Chat, Support-Workflows, Admin-Dashboard, Quelle: external-plugins/CleverSupportSystem/ |
-| 31 | `tctz.plugin.php` | CleverTimeZone | ✅ aktiv | Automation | 17 KB | **Version 1.2.0** - Automatische Zeitzone-Erkennung, User-spezifische Zeitzonen, Zeitstempel-Konvertierung, Quelle: external-plugins/CleverTimeZone/ |
-| 32 | `twofactor.plugin.php` | Two-Factor Authentication (2FA) | ✅ aktiv | Security | 19 KB | **Version 2.0.0** - TOTP-based 2FA, Google Authenticator, Backup Codes, PHP 8.x, 🔴 KRITISCHES SECURITY FEATURE, Quelle: b1gmail/src/plugins/ |
-| 33 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
-| 34 | `subdomainmanager.plugin.php` | Subdomain Manager | ✅ aktiv | Domains | 40 KB | Subdomain-Verwaltung |
 
 ---
 
-## 🔴 Deaktivierte/Problematische Plugins
+## Deprecated Plugins
 
-### `subdomainmanager.plugin.php` (geblockt)
+### `subdomainmanager.plugin.php` (deprecated)
 
-**Status:** ❌ Deaktiviert  
-**Grund:** HTTP 500 Internal Server Error  
-**Location:** `src/plugins_broken/subdomainmanager.plugin.php`  
-**Entdeckt:** 2025-12-08  
-**Priorität:** Mittel  
+**Status:** deprecated (2025-12-09)  
+**Grund:** Komplexe externe Dependencies, kein aktueller Use-Case  
+**Location:** `src/plugins_deprecated/subdomainmanager.plugin.php`  
+**Entscheidung:** Bewusst nicht repariert  
 
-**Symptome:**
-- Container wirft HTTP 500 wenn Plugin geladen wird
-- Verhindert gesamte App-Funktion
-- Wurde durch systematisches Plugin-Testing identifiziert
+**Technische Ursache für HTTP 500:**
+- Plugin versucht, 3 Helper-Dateien zu laden:
+  - `subdomainmanager.dns.helper.php`
+  - `subdomainmanager.emailadmin.helper.php`
+  - `subdomainmanager.keyhelp.helper.php`
+- Diese Dateien fehlen in `plugins_broken/`
+- Dateien existieren nur in Backup-Verzeichnissen
 
-**Nächste Schritte:**
-1. PHP-Syntax prüfen: `php -l subdomainmanager.plugin.php`
-2. Manuell laden mit Error-Output: `php -r "error_reporting(E_ALL); include 'subdomainmanager.plugin.php';"`
-3. DB-Abhängigkeiten prüfen (Tabellen, Schema)
-4. PHP 8.3 Kompatibilität prüfen
-5. Dependencies checken (Composer-Packages)
+**Warum deprecated (nicht repariert):**
+1. **Komplexe Dependencies:** DNS-Management, EmailAdmin-Integration, KeyHelp-Integration
+2. **Kein Use-Case:** b1gMail wird als internes System betrieben, keine Subdomain-Verwaltung benötigt
+3. **Externe Alternativen besser:** Subdomain-Verwaltung via Reverse Proxy (Nginx/Traefik), DNS-Provider-UI, Plesk/cPanel
+4. **Wartungsaufwand zu hoch:** Würde separate DNS-Server-Integration, KeyHelp-API, etc. erfordern
+5. **Scope-Entscheidung:** Fokus auf Core-Email-Features, nicht auf Infrastruktur-Management
 
-**Workaround:**
-- Aktuell nicht kritisch - Subdomain-Features sind optional
-- System läuft stabil ohne dieses Plugin (26/27 = 96.3%)
+**Alternative Lösungen:**
+- **Reverse Proxy:** Nginx/Traefik für Subdomain-Routing
+- **DNS-Provider:** CloudFlare, Route53, DNS-Provider-UI
+- **Control Panel:** Plesk, cPanel, DirectAdmin für Subdomain-Verwaltung
+- **Kubernetes:** Ingress-Controller für Multi-Domain-Routing
 
----
-
-## 📦 Vorbereitete Externe Plugins
+**Fazit:**
+- Plugin ist bewusst **nicht repariert**
+- Subdomain-Features werden **extern** gehandhabt
+- System läuft stabil ohne dieses Plugin (33/34 = 97.1%)
 
 Diese Plugins sind im Repository verfügbar (`external-plugins/`), aber noch **NICHT** in `src/plugins/` aktiv.
 
