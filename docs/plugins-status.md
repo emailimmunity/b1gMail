@@ -1,18 +1,19 @@
 # b1gMail Plugins – Status
 
-**Zuletzt aktualisiert:** 2025-12-08 19:35  
+**Zuletzt aktualisiert:** 2025-12-09 07:50  
 **Geprüft von:** Windsurf AI + Karsten  
 **Container:** b1gmail  
-**Branch:** main
+**Branch:** tech-debt/subdomainmanager
 
 ---
 
 ## 📊 Übersicht
 
-**Aktiv:** 27/28 Plugins (96.4%)  
-**Geblockt:** 1 Plugin  
+**Aktiv:** 26/27 Plugins (96.3%)  
+**Backup/Archive:** 1 Plugin (removeip_v1_backup)  
+**Geblockt:** 1 Plugin (subdomainmanager)  
 **Vorbereitet (extern):** 7 Plugins  
-**Status:** ✅ Produktiv einsatzbereit  
+**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform aktiviert  
 **External Services:** ✅ Elasticsearch 8.11.0 aktiv
 
 ---
@@ -41,8 +42,8 @@
 | 18 | `premiumaccount.plugin.php` | Premium Accounts | ✅ aktiv | Billing | 118 KB | Premium-Features + Billing |
 | 19 | `product-subscription.plugin.php` | Product Subscriptions | ✅ aktiv | Billing | 4 KB | Abo-Verwaltung für Produkte |
 | 20 | `profilecheck.plugin.php` | Profile Check | ✅ aktiv | Security | 7 KB | Profil-Validierung |
-| 21 | `removeip.plugin.php` | IP Remover (TKÜV) | ✅ aktiv | Privacy/Legal | 11 KB | **Version 2.0.0** - TKÜV-konform, Überwachungs-Management, Quelle: src/src/plugins/removeip.plugin.php |
-| 21b | `removeip_v1_backup.plugin.php` | RemoveIP V1 Backup | 📦 backup | Archive | 1.4 KB | Backup von Version 1.0.1 - NICHT aktiv, nur für Rollback |
+| 21 | `removeip.plugin.php` | IP Remover (TKÜV) | ✅ aktiv | Privacy/Legal | 11 KB | **Version 2.0.0** - TKÜV-konform, Überwachungs-Management, MySQL 8.x kompatibel, Quelle: src/src/plugins/removeip.plugin.php |
+| 21b | `removeip_v1_backup.plugin.php` | RemoveIP V1 Backup | 📦 backup | Archive | 11 KB | Backup der vorherigen Version - NUR für Rollback, wird NICHT geladen |
 | 22 | `search.plugin.php` | Search | ✅ aktiv | Frontend | 23 KB | Erweiterte Suchfunktion |
 | 23 | `signature.plugin.php` | Signature Manager | ✅ aktiv | Frontend | 10 KB | Email-Signaturen für User |
 | 24 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
