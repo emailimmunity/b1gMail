@@ -241,13 +241,22 @@ class ModernFrontend
 			$tpl->assign('mf_language_switcher', $languageSwitcher);
 		}
 		
-		// Design Assets
+		// Design Assets with Branding API Fallback
 		if($this->currentDesign) {
 			$themeLoader = $this->getThemeLoader();
 			$tpl->assign('mf_css_url', $themeLoader->getCSSUrl($this->currentDesign['folder']));
 			$tpl->assign('mf_js_url', $themeLoader->getJSUrl($this->currentDesign['folder']));
 			$tpl->assign('mf_primary_color', $this->currentDesign['primary_color']);
 			$tpl->assign('mf_secondary_color', $this->currentDesign['secondary_color']);
+		} 
+		// Fallback: Use Branding API if no ModernFrontend design is configured
+		elseif(function_exists('GetBrandingForDomain')) {
+			$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+			$brandingData = GetBrandingForDomain($host);
+			
+			// Use Branding API colors as fallback
+			$tpl->assign('mf_primary_color', $brandingData['primary_color']);
+			$tpl->assign('mf_secondary_color', $brandingData['secondary_color']);
 		}
 		
 		return true;

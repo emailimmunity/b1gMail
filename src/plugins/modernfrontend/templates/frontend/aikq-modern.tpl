@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{$page_title|default:'aikQ - Dein sicheres E-Mail-Postfach'}</title>
+    <title>{$page_title|default:$branding.name|default:'aikQ - Dein sicheres E-Mail-Postfach'}</title>
     <meta name="description" content="Sicheres, verschlüsseltes E-Mail-Postfach mit modernster Technologie. Made in Germany.">
+    
+    {* Branding API: Favicon *}
+    {if $branding.favicon_url}
+    <link rel="icon" href="{$branding.favicon_url}">
+    {/if}
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,14 +24,15 @@
     
     <style>
         :root {
-            --aikq-green: #76B82A;
-            --aikq-green-dark: #5D9321;
-            --aikq-green-light: #8FD645;
+            {* Branding API: Use branding colors with ModernFrontend fallback *}
+            --aikq-green: {$branding.primary_color|default:$mf_primary_color|default:'#76B82A'};
+            --aikq-green-dark: {$branding.secondary_color|default:$mf_secondary_color|default:'#5D9321'};
+            --aikq-green-light: {$branding.accent_color|default:'#8FD645'};
             --aikq-gray-dark: #2D3748;
             --aikq-gray: #4A5568;
             --aikq-gray-light: #E2E8F0;
             --aikq-white: #FFFFFF;
-            --aikq-bg: #F7FAFC;
+            --aikq-bg: {$branding.background|default:'#F7FAFC'};
             --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
             --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
             --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
@@ -789,11 +795,13 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2025 aikQ. Alle Rechte vorbehalten. Made with 💚 in Germany.</p>
+                {* Branding API: Use branding footer text with fallback *}
+                <p>{$branding.footer_text|default:'&copy; 2025 aikQ. Alle Rechte vorbehalten. Made with 💚 in Germany.'}</p>
                 {if $mf_language}
                     <p style="margin-top: 10px; font-size: 14px;">
                         Aktuelle Sprache: {$mf_language.name} ({$mf_language.code})
                         {if $mf_design} | Design: {$mf_design.name}{/if}
+                        {if $branding.is_default === false} | Branding: {$branding.name}{/if}
                     </p>
                 {/if}
             </div>

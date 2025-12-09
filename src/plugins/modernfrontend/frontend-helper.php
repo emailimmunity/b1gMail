@@ -150,8 +150,21 @@ function mf_status()
 	return $mf->checkSystemStatus();
 }
 
+// Branding API Integration: GetBrandingForDomain()
+// Load domain-specific branding configuration
+$brandingData = null;
+if(function_exists('GetBrandingForDomain')) {
+	$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+	$brandingData = GetBrandingForDomain($host);
+}
+
 // Smarty Template-Variablen registrieren (wenn Smarty vorhanden)
 if(isset($tpl) && is_object($tpl)) {
 	$mf->registerToSmarty($tpl);
+	
+	// Branding-Daten an Smarty übergeben
+	if($brandingData !== null) {
+		$tpl->assign('branding', $brandingData);
+	}
 }
 ?>

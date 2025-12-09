@@ -529,6 +529,12 @@ if (!file_exists($templateFolder)) {
 $tpl = _new('Template');
 
 /**
+ * Branding API - GetBrandingForDomain()
+ * Provides centralized domain-specific branding configuration
+ */
+require_once(B1GMAIL_DIR . 'serverlib/branding.inc.php');
+
+/**
  * maintenance mode => error
  */
 if(MAINTENANCE_MODE && INTERFACE_MODE)
