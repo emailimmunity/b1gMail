@@ -1,18 +1,18 @@
 # b1gMail Plugins – Status
 
-**Zuletzt aktualisiert:** 2025-12-09 11:54  
+**Zuletzt aktualisiert:** 2025-12-09 14:50  
 **Geprüft von:** Windsurf AI + Karsten  
 **Container:** b1gmail  
-**Branch:** feature/activate-clever-cron
+**Branch:** feature/activate-clever-timezone
 
 ---
 
 ## 📊 Übersicht
 
-**Aktiv:** 28/29 Plugins (96.6%)  
+**Aktiv:** 29/30 Plugins (96.7%)  
 **Geblockt:** 1 Plugin (subdomainmanager)  
-**Vorbereitet (extern):** 5 Plugins  
-**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform + CleverBranding + CleverCron aktiviert  
+**Vorbereitet (extern):** 4 Plugins  
+**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform + CleverBranding + CleverCron + CleverTimeZone aktiviert  
 **Hinweis:** universalsearch.plugin.php wurde aus der Dokumentation entfernt (Datei existiert nicht)  
 **External Services:** ✅ Elasticsearch 8.11.0 aktiv  
 **Backup:** `removeip_v1_backup.plugin.php.bak` (für Rollback verfügbar)
@@ -50,8 +50,9 @@
 | 25 | `stalwart-jmap.plugin.php` | Stalwart JMAP | ✅ aktiv | Integration | 12 KB | JMAP-Integration mit Stalwart Server |
 | 26 | `tcbrn.plugin.php` | CleverBranding | ✅ aktiv | Branding | 14 KB | **Version 1.3.1** - White-Label, Custom Logos, Color Schemes, Domain-specific Branding, Quelle: external-plugins/CleverBranding/ |
 | 27 | `tccrn.plugin.php` | CleverCron | ✅ aktiv | Automation | 37 KB | **Version 1.3.0** - Cron-Job-Verwaltung im Admin, Scheduled Tasks, Job-Status-Monitoring, Quelle: external-plugins/CleverCron/ |
-| 28 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
-| 29 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
+| 28 | `tctz.plugin.php` | CleverTimeZone | ✅ aktiv | Automation | 17 KB | **Version 1.2.0** - Automatische Zeitzone-Erkennung, User-spezifische Zeitzonen, Zeitstempel-Konvertierung, Quelle: external-plugins/CleverTimeZone/ |
+| 29 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
+| 30 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
 
 ---
 
