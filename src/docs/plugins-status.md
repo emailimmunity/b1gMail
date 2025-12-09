@@ -1,18 +1,18 @@
 # b1gMail Plugins – Status
 
-**Zuletzt aktualisiert:** 2025-12-09 09:33  
+**Zuletzt aktualisiert:** 2025-12-09 11:54  
 **Geprüft von:** Windsurf AI + Karsten  
 **Container:** b1gmail  
-**Branch:** feature/activate-clever-branding
+**Branch:** feature/activate-clever-cron
 
 ---
 
 ## 📊 Übersicht
 
-**Aktiv:** 27/28 Plugins (96.4%)  
+**Aktiv:** 28/29 Plugins (96.6%)  
 **Geblockt:** 1 Plugin (subdomainmanager)  
-**Vorbereitet (extern):** 6 Plugins  
-**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform + CleverBranding aktiviert  
+**Vorbereitet (extern):** 5 Plugins  
+**Status:** ✅ Produktiv einsatzbereit - RemoveIP V2 TKÜV-konform + CleverBranding + CleverCron aktiviert  
 **Hinweis:** universalsearch.plugin.php wurde aus der Dokumentation entfernt (Datei existiert nicht)  
 **External Services:** ✅ Elasticsearch 8.11.0 aktiv  
 **Backup:** `removeip_v1_backup.plugin.php.bak` (für Rollback verfügbar)
@@ -49,8 +49,9 @@
 | 24 | `sslmanager.plugin.php` | SSL Manager | ✅ aktiv | Security | 15 KB | SSL-Zertifikate-Verwaltung |
 | 25 | `stalwart-jmap.plugin.php` | Stalwart JMAP | ✅ aktiv | Integration | 12 KB | JMAP-Integration mit Stalwart Server |
 | 26 | `tcbrn.plugin.php` | CleverBranding | ✅ aktiv | Branding | 14 KB | **Version 1.3.1** - White-Label, Custom Logos, Color Schemes, Domain-specific Branding, Quelle: external-plugins/CleverBranding/ |
-| 27 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
-| 28 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
+| 27 | `tccrn.plugin.php` | CleverCron | ✅ aktiv | Automation | 37 KB | **Version 1.3.0** - Cron-Job-Verwaltung im Admin, Scheduled Tasks, Job-Status-Monitoring, Quelle: external-plugins/CleverCron/ |
+| 28 | `whitelist.plugin.php` | Whitelist | ✅ aktiv | Security | 4 KB | Email-Whitelist-Verwaltung |
+| 29 | `subdomainmanager.plugin.php` | Subdomain Manager | ❌ geblockt | Domains | 40 KB | **HTTP 500 Error** - muss debugged werden |
 
 ---
 
@@ -88,8 +89,7 @@ Diese Plugins sind im Repository verfügbar (`external-plugins/`), aber noch **N
 
 | # | Datei | Name | Quelle | Status | Size | Notizen |
 |---|-------|------|--------|--------|------|---------|
-| 29 | `fulltext.plugin.php` | Better Mail Search | `external-plugins/BetterMailSearch/` | 🟡 vorbereitet | 54 KB | Volltext-Suche in E-Mails - optional, aktuell nicht benötigt |
-| 30 | `tccrn.plugin.php` | CleverCron | `external-plugins/CleverCron/` | 🟡 vorbereitet | 37 KB | Cron-Job-Verwaltung im Admin - Aktivierung geplant |
+| 30 | `fulltext.plugin.php` | Better Mail Search | `external-plugins/BetterMailSearch/` | 🟡 vorbereitet | 54 KB | Volltext-Suche in E-Mails - optional, aktuell nicht benötigt |
 | 31 | `tccme.plugin.php` | CleverMailEncryption | `external-plugins/CleverMailEncryption/` | 🟡 vorbereitet | 34 KB | S/MIME + PGP Encryption - Aktivierung geplant |
 | 32 | `tcsup.plugin.php` | CleverSupportSystem | `external-plugins/CleverSupportSystem/` | 🟡 vorbereitet | 75 KB | Ticket-System + Knowledge Base - Aktivierung geplant |
 | 33 | `tctz.plugin.php` | CleverTimeZone | `external-plugins/CleverTimeZone/` | 🟡 vorbereitet | 17 KB | Automatische Zeitzone-Erkennung - Aktivierung geplant |
